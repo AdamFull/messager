@@ -1,5 +1,6 @@
 import socket as s
 from threading import Thread
+import json
 
 class server:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM) #Создаём сетевой сокет
