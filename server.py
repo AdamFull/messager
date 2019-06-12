@@ -29,6 +29,9 @@ class Server:
                 self.connections.remove(c)
                 c.close()
                 break
+    
+    def server_command(self, command):
+        pass
 
     def run(self):
         self.state = STATE_WORKING

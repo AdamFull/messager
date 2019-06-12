@@ -1,2 +1,3 @@
 @echo off
-python server.py
+python messager_cli.py -m server
+pause
