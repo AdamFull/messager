@@ -3,33 +3,42 @@
 
 import socket as s
 from threading import Thread
-import json
-import sys
-import struct
+import json, sys, struct, os
 
 #This class contains all slient settings
 #- loads settings from file
 #- saves settings to file
 class ClientSetting:
-    def __init__(self, fname = ""):
+    def __init__(self):
         self.nickname = 'Jimmy'
         self.server_ip = 'localhost'
         self.port = 9191
         #and so on
 
-        if fname:
-            self.load(fname)
+        if os.path.exists('config/'):
+            if os.path.exists('config/user.json'): 
+                self.load()   
 
-    def load(self, fname):
-        #TODO: implement settings loading
-        pass
+    def load(self, fname='config/user.json'):
+        with open(fname, "r") as read_f:
+            data = json.load(read_f)
+            self.nickname = data["nickname"]
+            self.server_ip = data["ip"]
+            self.port = data["port"]
+    
+    def save(self, fname='config/user.json'):
+        if not os.path.exists('config/'):
+            os.makedirs('config/')
+        with open(fname, "w") as write_f:
+            data = {"nickname" : self.nickname, "ip" : self.server_ip, "port" : self.port}
+            json.dump(data, write_f)
 
 
 class Client:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)               #Creating up network socket
 
     def __init__(self, nickname='Jimmy', address='localhost', port=9191):
-
+        self.version = "alpha"
         self.setting = ClientSetting()
         self.setting.nickname = nickname
         self.setting.server_ip = address
@@ -49,11 +58,29 @@ class Client:
             raw_data = json.loads(data)
             print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
     
+    def parse_command(self, string):
+        args = string.split(" ")
+        for a in args:
+            if a == "p":
+                print("New password: %s" % args[1])
+                break
+            elif a == "e":
+                self.sock.close()
+                exit()
+            elif a == "v":
+                print(self.version)
+                break
+
+        
+    
     def send(self, input_msg): #Message sending method
-        msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
-        raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
-        msg = struct.pack('>I', len(raw_data)) + raw_data
-        self.sock.sendall(msg)
+        if(input_msg[0] == "/"):
+            self.parse_command(input_msg.split("/")[1])
+        else:
+            msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
+            raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
+            msg = struct.pack('>I', len(raw_data)) + raw_data
+            self.sock.sendall(msg)
     
     def recv(self): #Message receiving method
         raw_msglen = self.recvall(4)
