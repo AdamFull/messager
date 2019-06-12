@@ -23,9 +23,3 @@ class AESCrypt:
         iv = raw[:16]
         aes = AES.new(key, AES.MODE_CBC, iv)
         return unpad(aes.decrypt(raw[16:]))
-
-msg = "hello world"
-aes = AESCrypt()
-crypted = aes.encrypt(msg)
-print(crypted)
-print(aes.decrypt(aes.getKey(), crypted))
