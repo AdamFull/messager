@@ -1,19 +1,50 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import socket as s
 from threading import Thread
 import json
 import sys
 import struct
 
-class client:
-    sock = s.socket(s.AF_INET, s.SOCK_STREAM)               #Создаём сетевой сокет
-    def __init__(self, nickname, address, port = 9191):
-        self.sock.connect((address, port))
-        self.nickname = nickname
+#This class contains all slient settings
+#- loads settings from file
+#- saves settings to file
+class ClientSetting:
+    def __init__(self, fname = ""):
+        self.nickname = 'Jimmy'
+        self.server_ip = 'localhost'
+        self.port = 9191
+        #and so on
 
-        thread = Thread(target=self.send)
-        thread.daemon = True
-        thread.start()
-        while True:
+        if fname:
+            self.load(fname)
+
+    def load(self, fname):
+        #TODO: implement settings loading
+        pass
+
+    def load(self, fname):
+        #TODO: implement settings saving
+        pass
+
+
+class Client:
+    sock = s.socket(s.AF_INET, s.SOCK_STREAM)               #Создаём сетевой сокет
+
+    def __init__(self, nickname, address, port=9191):
+
+        self.setting = ClientSetting()
+        self.setting.nickname = nickname
+        self.setting.server_ip = address
+        self.setting.port = port
+
+        self.sock.connect((self.setting.server_ip, self.setting.port))
+
+        self.thread = Thread(target=self.send)
+        self.daemon = True
+        self.thread.start()
+        while self.daemon:
             data = self.recv()
             if not data:
                 break
@@ -22,7 +53,7 @@ class client:
     
     def send(self): #Отправка сообщений
         while True:
-            msg_data = {"nickname" : self.nickname, "msg" : input(">>")}
+            msg_data = {"nickname": self.setting.nickname, "msg": input(">>")}
             raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
             msg = struct.pack('>I', len(raw_data)) + raw_data
             self.sock.sendall(msg)
@@ -43,5 +74,10 @@ class client:
             data += packet
         return data
 
-if len(sys.argv) > 1:
-    clt = client(sys.argv[1] ,'localhost', 9191)
+    def start(self):
+        pass
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        clt = Client(sys.argv[1], 'localhost', 9191)
