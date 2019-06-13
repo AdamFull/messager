@@ -38,7 +38,6 @@ class Client:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)               #Creating up network socket
 
     def __init__(self, nickname='Jimmy', address='localhost', port=9191):
-        self.version = "alpha"
         self.setting = ClientSetting()
         self.setting.nickname = nickname
         self.setting.server_ip = address
@@ -57,30 +56,14 @@ class Client:
                 break
             raw_data = json.loads(data)
             print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
-    
-    def parse_command(self, string):
-        args = string.split(" ")
-        for a in args:
-            if a == "p":
-                print("New password: %s" % args[1])
-                break
-            elif a == "e":
-                self.sock.close()
-                exit()
-            elif a == "v":
-                print(self.version)
-                break
 
         
     
     def send(self, input_msg): #Message sending method
-        if(input_msg[0] == "/"):
-            self.parse_command(input_msg.split("/")[1])
-        else:
-            msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
-            raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
-            msg = struct.pack('>I', len(raw_data)) + raw_data
-            self.sock.sendall(msg)
+        msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
+        raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
+        msg = struct.pack('>I', len(raw_data)) + raw_data
+        self.sock.sendall(msg)
     
     def recv(self): #Message receiving method
         raw_msglen = self.recvall(4)
@@ -100,6 +83,9 @@ class Client:
 
     def start(self):
         pass
+    
+    def close(self):
+        self.sock.detach()
 
 
 if __name__ == "__main__":
