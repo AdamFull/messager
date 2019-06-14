@@ -5,12 +5,13 @@ import socket as s
 from threading import Thread
 import json, sys, struct, os
 
-#This class contains all slient settings
+#This class contains all client settings
 #- loads settings from file
 #- saves settings to file
 class ClientSetting:
     def __init__(self):
         self.nickname = 'Jimmy'
+        self.password = 'password'
         self.server_ip = 'localhost'
         self.port = 9191
         #and so on
@@ -23,6 +24,7 @@ class ClientSetting:
         with open(fname, "r") as read_f:
             data = json.load(read_f)
             self.nickname = data["nickname"]
+            self.password = data["password"]
             self.server_ip = data["ip"]
             self.port = data["port"]
     
@@ -30,7 +32,7 @@ class ClientSetting:
         if not os.path.exists('config/'):
             os.makedirs('config/')
         with open(fname, "w") as write_f:
-            data = {"nickname" : self.nickname, "ip" : self.server_ip, "port" : self.port}
+            data = {"nickname" : self.nickname, "password" : self.password, "ip" : self.server_ip, "port" : self.port}
             json.dump(data, write_f)
 
 
@@ -75,7 +77,11 @@ class Client:
     def recvall(self, n): #Вспомогательный метод для принятия сообщений, читает из сокета
         data = b''
         while len(data) < n:
-            packet = self.sock.recv(n - len(data))
+            try:
+                packet = self.sock.recv(n - len(data))
+            except Exception as e:
+                print("Server lost connection.")
+                return None
             if not packet:
                 return None
             data += packet
@@ -83,6 +89,10 @@ class Client:
 
     def start(self):
         pass
+    
+    def set_password(self, new_password):
+        self.setting.password = new_password
+        self.setting.save()
     
     def close(self):
         self.sock.detach()

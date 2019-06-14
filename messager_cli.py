@@ -17,6 +17,7 @@ class Temp:
         for a in args:
             if a == "p":
                 print("New password: %s" % args[1])
+                self.client.set_password(args[1])
                 break
             elif a == "e":
                 self.client.close()
@@ -40,7 +41,8 @@ if __name__ == "__main__":
         server_thread = Thread(target=srv.run)
         server_thread.start()
         while True:
-            srv.server_command(input('>>'))
+            if input('>>') == 'stop':
+                srv.stop()
 
     elif parsed.mode == 'client':
         cli_set = client.ClientSetting()
