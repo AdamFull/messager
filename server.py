@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import socket as s
-from threading import Thread
+import threading
 import json
 
 STATE_READY = 0
@@ -21,13 +21,15 @@ class Server:
         self.state = STATE_READY
 
     def handler(self, c, a):
-        while self.state == STATE_WORKING:
+        thread = threading.current_thread()
+        while self.state == STATE_WORKING and getattr(thread, "do_run", True):
             try:
                 data = c.recv(1024)  # Читаем клиент
             except s.error as e:
                 if e.errno == s.errno.ECONNRESET:
                     print(str(a[0]) + ':' + str(a[1]), "disconnected", len(self.connections))
                     self.connections.remove(c)
+                    self.threads.remove(thread)
                     c.close()
                     break
                 else:
@@ -42,7 +44,7 @@ class Server:
         index = 0
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
-            self.threads.append(Thread(target=self.handler, args=(c, a)))  # Отдельный поток для хандлера
+            self.threads.append(threading.Thread(target=self.handler, args=(c, a)))  # Отдельный поток для хандлера
             self.threads[len(self.threads) - 1].daemon = True
             self.threads[len(self.threads) - 1].start()
             self.connections.append(c)  # Добавляем подключения, если они были
@@ -51,6 +53,7 @@ class Server:
     
     def stop(self):
         for thread in self.threads:
+            thread.do_run = False
             thread.join()
         print("Threads closed.")
 
