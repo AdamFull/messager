@@ -3,7 +3,7 @@
 
 import socket as s
 import threading
-import json
+import json, random
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -20,6 +20,9 @@ class Server:
         self.sock.listen(1)  # Слушаем сокет
         self.state = STATE_READY
 
+        self.public_g = random.randint(1, 100)
+        self.public_p = random.randint(100, 1000)
+
     def handler(self, c, a):
         thread = threading.current_thread()
         while self.state == STATE_WORKING and getattr(thread, "do_run", True):
@@ -27,10 +30,11 @@ class Server:
                 data = c.recv(1024)  # Читаем клиент
             except s.error as e:
                 if e.errno == s.errno.ECONNRESET:
-                    print(str(a[0]) + ':' + str(a[1]), "disconnected", len(self.connections))
+                    print(str(a[0]) + ':' + str(a[1]), "disconnected", len(self.connections), "in thread: ", thread.getName())
                     self.connections.remove(c)
                     self.threads.remove(thread)
                     c.close()
+                    thread.do_run = False
                     break
                 else:
                     print(e)
@@ -41,16 +45,14 @@ class Server:
 
     def run(self):
         self.state = STATE_WORKING
-        index = 0
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
             self.threads.append(threading.Thread(target=self.handler, args=(c, a)))  # Отдельный поток для хандлера
             self.threads[len(self.threads) - 1].daemon = True
             self.threads[len(self.threads) - 1].start()
             self.connections.append(c)  # Добавляем подключения, если они были
-            print(str(a[0]) + ':' + str(a[1]), "connected", len(self.connections))
-            index += 1
-    
+            print(str(a[0]) + ':' + str(a[1]), "connected", len(self.connections), "in thread: ", self.threads[len(self.threads) - 1].getName())
+
     def stop(self):
         for thread in self.threads:
             thread.do_run = False
