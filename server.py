@@ -17,7 +17,7 @@ class Server:
 
     def __init__(self):
         self.sock.bind(('0.0.0.0', 9191))  # Задаём параметры сокета
-        self.sock.listen(1)  # Слушаем сокет
+        self.sock.listen(10)  # Слушаем сокет
         self.state = STATE_READY
 
     def handler(self, c, a):

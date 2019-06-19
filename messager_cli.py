@@ -14,17 +14,23 @@ class Temp:
     
     def parse_command(self, string):
         args = string.split(" ")
-        for a in args:
-            if a == "p":
-                print("New password: %s" % args[1])
-                self.client.set_password(args[1])
-                break
-            elif a == "e":
-                self.client.close()
-                exit()
-            elif a == "v":
-                print(self.version)
-                break
+        command = args[0]
+        if command == "p":
+            print("New password: %s" % args[1])
+            self.client.set_password(args[1])
+        elif command == "e":
+            self.client.close()
+            exit()
+        elif command == "v":
+            print(self.version)
+        elif command == "d":
+            self.client.disconnect()
+        elif command == "c":
+            connection_args = args[1].split(":")
+            self.client.connect(connection_args[0], int(connection_args[1]))
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

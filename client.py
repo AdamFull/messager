@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import socket as s
-from threading import Thread
+import threading
 import json, sys, struct, os
 
 #This class contains all client settings
@@ -37,28 +37,59 @@ class ClientSetting:
 
 
 class Client:
-    sock = s.socket(s.AF_INET, s.SOCK_STREAM)               #Creating up network socket
-
+    sock = s.socket(s.AF_INET, s.SOCK_STREAM)
     def __init__(self, nickname='Jimmy', address='localhost', port=9191):
         self.setting = ClientSetting()
         self.setting.nickname = nickname
         self.setting.server_ip = address
         self.setting.port = port
 
-        self.sock.connect((self.setting.server_ip, self.setting.port))
+        self.threads = list()
 
-        thread = Thread(target=self.listen)
-        thread.daemon = True
-        thread.start()
+        self.isConnected = False
+
+        self.connect(self.setting.server_ip, self.setting.port)
 
     def listen(self):
-        while True:
+        current_thread = threading.current_thread()
+        while getattr(current_thread, "do_run", True):
             data = self.recv()
             if not data:
                 break
             raw_data = json.loads(data)
             print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
 
+
+    def connect(self, ip, port):
+        if self.isConnected:
+            print("Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port))
+            return None
+
+        print("Connecting to %s:%s" % (ip, port))
+        try:
+            self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+            self.sock.connect((ip, port))
+        except Exception as e:
+            print("Connection error. %s" % e)
+            return None
+        self.setting.server_ip = ip
+        self.setting.port = port
+
+        print("Connected to %s:%s" % (ip, port))
+        self.isConnected = True
+        self.threads.append(threading.Thread(target=self.listen))
+        self.threads[0].daemon = True
+        self.threads[0].do_run = True
+        self.threads[0].start()
+    
+    def disconnect(self):
+        print("Disconnecting from server.")
+        self.isConnected = False
+        self.threads[0].do_run = False
+        self.sock.close()
+        self.threads[0].join()
+        self.threads.clear()
+        
         
     
     def send(self, input_msg): #Message sending method
