@@ -3,7 +3,7 @@
 
 import socket as s
 import threading
-import json
+import json, struct
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -19,6 +19,7 @@ class Server:
         self.sock.bind(('0.0.0.0', 9191))  # Задаём параметры сокета
         self.sock.listen(10)  # Слушаем сокет
         self.state = STATE_READY
+        self.key = 'helloworld'
 
     def handler(self, c, a):
         thread = threading.current_thread()
@@ -39,11 +40,15 @@ class Server:
             for connection in self.connections:
                 connection.send(data)  # Отправляем всем клиентам
 
+    def send_key(self, c):
+        c.sendall(struct.pack('>I', len(self.key)) + self.key.encode('utf-8'))
+
     def run(self):
         self.state = STATE_WORKING
         index = 0
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
+            self.send_key(c)
             self.threads.append(threading.Thread(target=self.handler, args=(c, a)))  # Отдельный поток для хандлера
             self.threads[len(self.threads) - 1].daemon = True
             self.threads[len(self.threads) - 1].start()

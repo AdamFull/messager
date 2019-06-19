@@ -26,8 +26,11 @@ class Temp:
         elif command == "d":
             self.client.disconnect()
         elif command == "c":
-            connection_args = args[1].split(":")
-            self.client.connect(connection_args[0], int(connection_args[1]))
+            if len(args) > 1:
+                connection_args = args[1].split(":")
+                self.client.connect(connection_args[0], int(connection_args[1]))
+            else:
+                self.client.connect()
 
 
 

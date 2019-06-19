@@ -4,6 +4,8 @@
 import socket as s
 import threading
 import json, sys, struct, os
+import encryption
+from Crypto.PublicKey import RSA
 
 #This class contains all client settings
 #- loads settings from file
@@ -17,10 +19,10 @@ class ClientSetting:
         #and so on
 
         if os.path.exists('config/'):
-            if os.path.exists('config/user.json'): 
+            if os.path.exists('config/user.dat'): 
                 self.load()   
 
-    def load(self, fname='config/user.json'):
+    def load(self, fname='config/user.dat'):
         with open(fname, "r") as read_f:
             data = json.load(read_f)
             self.nickname = data["nickname"]
@@ -28,7 +30,7 @@ class ClientSetting:
             self.server_ip = data["ip"]
             self.port = data["port"]
     
-    def save(self, fname='config/user.json'):
+    def save(self, fname='config/user.dat'):
         if not os.path.exists('config/'):
             os.makedirs('config/')
         with open(fname, "w") as write_f:
@@ -56,11 +58,17 @@ class Client:
             data = self.recv()
             if not data:
                 break
-            raw_data = json.loads(data)
+            raw_data = json.loads(self.crypto.decrypt(data))
             print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
 
 
-    def connect(self, ip, port):
+    def connect(self, ip=None, port=None):
+        if not ip or not port:
+            print("Connecting to last server.")
+            self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+            self.sock.connect((self.setting.server_ip, self.setting.port))
+            print("Connected to %s:%s" % (self.setting.server_ip, self.setting.port))
+            return
         if self.isConnected:
             print("Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port))
             return None
@@ -72,6 +80,9 @@ class Client:
         except Exception as e:
             print("Connection error. %s" % e)
             return None
+        self.key = self.recv()
+        self.crypto = encryption.AESCrypt(self.key)
+
         self.setting.server_ip = ip
         self.setting.port = port
 
@@ -95,7 +106,8 @@ class Client:
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
         raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
-        msg = struct.pack('>I', len(raw_data)) + raw_data
+        crypted = self.crypto.encrypt(raw_data)
+        msg = struct.pack('>I', len(crypted)) + crypted
         self.sock.sendall(msg)
     
     def recv(self): #Message receiving method
@@ -126,7 +138,8 @@ class Client:
         self.setting.save()
     
     def close(self):
-        self.sock.detach()
+        self.setting.save()
+        self.sock.close()
 
 
 if __name__ == "__main__":

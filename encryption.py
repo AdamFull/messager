@@ -1,25 +1,40 @@
-import base64
 from Crypto import Random
 from Crypto.Cipher import AES
-
-pad = lambda s: s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
-unpad = lambda s : s[0:-ord(s[-1])]
+import hashlib
 
 class AESCrypt:
-    def __init__(self):
-        self.key = 'qwertyuiopasdfgh'
+    def __init__(self, key):
+        self.key = hashlib.sha256(key).digest()
     
-    def getKey(self):
-        return self.key
+    def pad(self, s):
+        return s+b"\0" * (AES.block_size - len(s) % AES.block_size)
     
-    def encrypt(self, message):
-        raw = pad(message)
+    def encrypt(self, msg):
+        message = self.pad(msg)
         iv = Random.new().read(AES.block_size)
-        aes = AES.new(self.key, AES.MODE_CBC, iv)
-        return base64.b64encode(iv + aes.encrypt(raw))
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return iv + cipher.encrypt(message)
+
+    def encrypt_file(self, path):
+        with open(path, 'rb') as file:
+            text = file.read()
+            file.close()
+        enc = self.encrypt(text)
+        with open(path, 'wb') as file:
+            file.write(enc)
+            file.close()
     
-    def decrypt(self, key, message):
-        raw = base64.b64decode(message)
-        iv = raw[:16]
-        aes = AES.new(key, AES.MODE_CBC, iv)
-        return unpad(aes.decrypt(raw[16:]))
+    def decrypt(self, encrypted):
+        iv = encrypted[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        text = cipher.decrypt(encrypted[AES.block_size:])
+        return text.rstrip(b"\0").decode('utf-8')
+    
+    def decrypt_file(self, path):
+        with open(path, 'rb') as file:
+            encrypted = file.read()
+            file.close()
+        enc = self.decrypt(encrypted)
+        with open(path, 'wb') as file:
+            file.write(enc)
+            file.close()
