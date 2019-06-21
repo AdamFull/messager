@@ -90,7 +90,8 @@ class Client:
         self.threads[0].join()
         self.threads.clear()
         
-        
+    def change_room(self, room_name):
+        pass
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
