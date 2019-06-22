@@ -4,6 +4,7 @@
 import socket as s
 import threading
 import json, sys, struct, os
+from protocol import Protocol
 
 #This class contains all client settings
 #- loads settings from file
@@ -53,11 +54,14 @@ class Client:
     def listen(self):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
-            data = self.recv()
+            data = self.protocol.recv(self.sock)
             if not data:
                 break
-            raw_data = json.loads(data)
-            print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
+            if data.decode('utf-8')[0] == '{':
+                raw_data = json.loads(data)
+                print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
+            else:
+                print(data)
 
 
     def connect(self, ip, port):
@@ -75,6 +79,8 @@ class Client:
         self.setting.server_ip = ip
         self.setting.port = port
 
+        self.protocol = Protocol()
+
         print("Connected to %s:%s" % (ip, port))
         self.isConnected = True
         self.threads.append(threading.Thread(target=self.listen))
@@ -90,34 +96,14 @@ class Client:
         self.threads[0].join()
         self.threads.clear()
         
-    def change_room(self, room_name):
-        pass
+    def server_command(self, command):
+        self.protocol.send(command, self.sock)
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
-        raw_data = json.dumps(msg_data, ensure_ascii=False).encode('utf-8')
-        msg = struct.pack('>I', len(raw_data)) + raw_data
-        self.sock.sendall(msg)
-    
-    def recv(self): #Message receiving method
-        raw_msglen = self.recvall(4)
-        if not raw_msglen:
-            return None
-        msglen = struct.unpack('>I', raw_msglen)[0]
-        return self.recvall(msglen)
-
-    def recvall(self, n): #Вспомогательный метод для принятия сообщений, читает из сокета
-        data = b''
-        while len(data) < n:
-            try:
-                packet = self.sock.recv(n - len(data))
-            except Exception as e:
-                print("Server lost connection.")
-                return None
-            if not packet:
-                return None
-            data += packet
-        return data
+        raw_data = json.dumps(msg_data, ensure_ascii=False)
+        self.protocol.send(raw_data, self.sock)
+        
 
     def start(self):
         pass

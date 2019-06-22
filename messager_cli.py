@@ -28,6 +28,8 @@ class Temp:
         elif command == "c":
             connection_args = args[1].split(":")
             self.client.connect(connection_args[0], int(connection_args[1]))
+        elif command == "server":
+            self.client.server_command(string)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
