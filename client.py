@@ -39,13 +39,16 @@ class ClientSetting:
 
 class Client:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)
-    def __init__(self, nickname='Jimmy', address='localhost', port=9191):
+    def __init__(self, nickname='Jimmy', address='localhost', port=9191, receive_callback=None):
         self.setting = ClientSetting()
         self.setting.nickname = nickname
         self.setting.server_ip = address
         self.setting.port = port
 
         self.threads = list()
+
+        #This callback sets by frontend to handle incoming messages
+        self.rcv_output = receive_callback
 
         self.isConnected = False
 
@@ -59,7 +62,10 @@ class Client:
                 break
             if data.decode('utf-8')[0] == '{':
                 raw_data = json.loads(data)
-                print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
+                if self.rcv_output:
+                    self.rcv_output(raw_data)
+                else:
+                    print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
             else:
                 print(data)
 
