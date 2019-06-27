@@ -5,8 +5,9 @@ import socket as s
 import threading, json, os, configparser
 from protocol import Protocol
 from autologging import logged, traced
-import logging
+import logging, random, string
 from hashlib import sha256
+from Server.sql_interface import SqlInterface
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -17,12 +18,33 @@ STATE_STOPPING = 3
 class ServerData:
     def __init__(self):
         self.data_path = 'Server/Data/'
+        self.database_path = self.data_path + "server_database.db"
         self.cache_path = 'Server/Cache/'
+        self.sql_interface = SqlInterface()
         
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)
         if not os.path.exists(self.cache_path):
             os.makedirs(self.cache_path)
+
+        if not self.sql_interface.connect(self.database_path):
+            self.sql_interface.connect(self.database_path)
+        
+            self.sql_interface.create_table("users", "id INTEGER_PRIMARY_KEY, username TEXT, password TEXT, validation INTEGER, invite_word TEXT, invite_hash TEXT")
+            self.sql_interface.close()
+    def open_db(self, db):
+        self.sql_interface.connect(self.data_path + db + ".db")
+    
+    def generate_word(self):
+        result = ""
+        for i in range(32):
+            result += random.choice(string.ascii_letters + string.digits + string.punctuation)
+        return result
+    
+    def validate_user(self, word):
+        pass
+
+
 
 @traced
 @logged
@@ -34,7 +56,6 @@ class ServerSettings:
         self.server_port = 9191
         self.maximum_users = 100
         self.enable_password = False
-        self.server_password = '790DFE9491B740FFC9131B2283CD72DD557AC7C7F51D12F65AC846ECECCEF9B9' #hello_world
         self.enable_whitelist = False
         self.whitelist = []
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
@@ -55,18 +76,20 @@ class ServerSettings:
     def update_password(self, new_password):
         self.server_password = sha256(new_password.encode('utf-8')).hexdigest()
         self.save()
-        
+    
+    def getlist(self, string):
+        bad_chars = ['[', ']', '\'', ' ']
+        return (''.join(i for i in string if not i in bad_chars)).split(',')
 
     def load(self):
         self.config.read(self.config_path)
         self.server_ip = self.config["NET"].get("server_ip")
-        self.server_port = self.config["NET"].get("server_port")
-        self.maximum_users = self.config["SETTINGS"].get("max_slots")
+        self.server_port = self.config["NET"].getint("server_port")
+        self.maximum_users = self.config["SETTINGS"].getint("max_slots")
         self.enable_password = self.config["SETTINGS"].getboolean('enable_password')
-        self.server_password = self.config["SETTINGS"].get('server_password')
         self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
-        self.whitelist = self.config["SETTINGS"].getlist('white_list')
-        self.server_rooms = self.config["SETTINGS"].getlist('rooms')
+        self.whitelist = self.getlist(self.config["SETTINGS"].get('white_list'))
+        self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
 
 
 @traced
@@ -79,6 +102,7 @@ class Server:
 
     def __init__(self):
         self.setting = ServerSettings()
+        self.server_database = ServerData()
 
         self.sock.bind((self.setting.server_ip, self.setting.server_port))  # Задаём параметры сокета
         self.sock.listen(self.setting.maximum_users)  # Слушаем сокет
@@ -91,7 +115,7 @@ class Server:
         while self.state == STATE_WORKING and getattr(thread, "do_run", True):
             try:
                 data = self.protocol.recv(self.connections[client_index][0])  # Читаем клиент
-                self.parse_command(data, client_index)
+                self.parse_client_command(data, client_index)
 
             except s.error as e:
                 if e.errno == s.errno.ECONNRESET:
@@ -108,7 +132,22 @@ class Server:
                 if connection[2] == self.connections[client_index][2] and connection != self.connections[client_index]:
                     self.protocol.send(data, connection[0])  # Отправляем всем клиентам в этой же комнате
     
-    def parse_command(self, data, client_index):
+    def parse_server_command(self, data):
+        if not data == None:
+            args = data.split(' ')
+    
+    def registration(self, username, password):
+        if self.setting.enable_password:
+            self.server_database.open_db("server_database")
+            invite_word = self.server_database.generate_word()
+            invite_hash = sha256(invite_word.encode('utf-8')).hexdigest()
+            password_hash = sha256(password.encode('utf-8')).hexdigest()
+            self.server_database.sql_interface.insert("users", "username, password, invite_word, invite_hash", 
+                                                    "%s, %s, %s, %s" % (username, password_hash, invite_word, invite_hash))
+
+
+
+    def parse_client_command(self, data, client_index):
         if not data == None and "server" in data.decode('utf-8'):
             args = data.decode('utf-8').split(' ')
             if len(args) > 2:
