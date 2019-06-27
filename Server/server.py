@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import socket as s
-import threading, json, os
+import threading, json, os, configparser
 from protocol import Protocol
 from autologging import logged, traced
 import logging
+from hashlib import sha256
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -27,10 +28,15 @@ class ServerData:
 @logged
 class ServerSettings:
     def __init__(self):
-        self.config_path = 'Server/config.conf'
+        self.config = configparser.ConfigParser()
+        self.config_path = 'Server/config.ini'
         self.server_ip = '0.0.0.0'
         self.server_port = 9191
         self.maximum_users = 100
+        self.enable_password = False
+        self.server_password = '790DFE9491B740FFC9131B2283CD72DD557AC7C7F51D12F65AC846ECECCEF9B9' #hello_world
+        self.enable_whitelist = False
+        self.whitelist = []
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
 
         if os.path.isfile(self.config_path):
@@ -38,18 +44,30 @@ class ServerSettings:
         else:
             self.save()
     
-    def load(self):
-        with open(self.config_path, "r") as read_f:
-            data = json.load(read_f)
-            self.server_ip = data["ip"]
-            self.server_port = data["port"]
-            self.maximum_users = data["max_users"]
-            self.server_rooms = data["rooms"]
-    
     def save(self):
-        with open(self.config_path, "w") as write_f:
-            data = {"ip" : self.server_ip, "port" : self.server_port, "max_users" : self.maximum_users, "rooms" : self.server_rooms}
-            json.dump(data, write_f)
+        self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
+        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "server_password" : self.server_password, "enable_whitelist" : self.enable_whitelist,
+                                   "white_list" : self.whitelist, "rooms" : self.server_rooms}
+
+        with open(self.config_path, "w") as config_file:
+            self.config.write(config_file)
+    
+    def update_password(self, new_password):
+        self.server_password = sha256(new_password.encode('utf-8')).hexdigest()
+        self.save()
+        
+
+    def load(self):
+        self.config.read(self.config_path)
+        self.server_ip = self.config["NET"].get("server_ip")
+        self.server_port = self.config["NET"].get("server_port")
+        self.maximum_users = self.config["SETTINGS"].get("max_slots")
+        self.enable_password = self.config["SETTINGS"].getboolean('enable_password')
+        self.server_password = self.config["SETTINGS"].get('server_password')
+        self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
+        self.whitelist = self.config["SETTINGS"].getlist('white_list')
+        self.server_rooms = self.config["SETTINGS"].getlist('rooms')
+
 
 @traced
 @logged
