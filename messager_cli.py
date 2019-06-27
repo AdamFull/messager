@@ -1,23 +1,34 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import argparse
+import argparse, logging, os, sys, datetime
 from threading import Thread
-import server
-import client
+from Client import client
+from Server import server
+from autologging import logged, TRACE, traced
 
 class Temp:
     def __init__(self, sock, client):
         self.sock = sock
         self.client = client
         self.version = 'alpha'
+        self.server_log = 'Server/Log/'
+        self.client_log = 'Client/Log/'
+
+        if not os.path.exists(self.server_log):
+            os.makedirs(self.server_log)
+        if not os.path.exists(self.client_log):
+            os.makedirs(self.client_log)
     
     def parse_command(self, string):
         args = string.split(" ")
         command = args[0]
         if command == "p":
-            print("New password: %s" % args[1])
-            self.client.set_password(args[1])
+            if len(args) > 1:
+                print("New password: %s" % args[1])
+                self.client.set_password(args[1])
+            else:
+                print('Not enought arguments.')
         elif command == "e":
             self.client.close()
             exit()
@@ -42,6 +53,10 @@ if __name__ == "__main__":
 
     if parsed.mode == 'server':
         print("Start server")
+        logging.basicConfig(filename='%s/%s.log' % ('Server/Log', datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")),
+                            level=TRACE,
+                            format="%(levelname)s:%(filename)s,%(lineno)d:%(name)s.%(funcName)s:%(message)s")
+                            #, stream=sys.stderr
         srv = server.Server()
         server_thread = Thread(target=srv.run)
         server_thread.start()
@@ -57,15 +72,20 @@ if __name__ == "__main__":
             cli_set.server_ip = parsed.server_ip
         if parsed.server_port:
             cli_set.port = parsed.server_port
+        
+        logging.basicConfig(filename='%s/%s.log' % ('Client/Log', datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")),
+                            level=TRACE,
+                            format="%(levelname)s:%(filename)s,%(lineno)d:%(name)s.%(funcName)s:%(message)s")
 
         net_client = client.Client(cli_set.nickname, cli_set.server_ip, cli_set.port)
         tmp = Temp(net_client.sock, net_client)
         while True:
             input_msg = input('>>')
-            if(input_msg[0] == "/"):
-                tmp.parse_command(input_msg.split("/")[1])
-            else:
-                net_client.send(input_msg)
+            if not input_msg is '':
+                if(input_msg[0] == "/"):
+                    tmp.parse_command(input_msg.split("/")[1])
+                else:
+                    net_client.send(input_msg)
 
     #wait for server stop
     server_thread.join()
