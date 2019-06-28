@@ -1,0 +1,13 @@
+TRACE:server.py,103:Server.server.Server.__init__:CALL *() **{}
+TRACE:server.py,52:Server.server.ServerSettings.__init__:CALL *() **{}
+TRACE:server.py,84:Server.server.ServerSettings.load:CALL *() **{}
+TRACE:server.py,80:Server.server.ServerSettings.getlist:CALL *('[]',) **{}
+TRACE:server.py,80:Server.server.ServerSettings.getlist:RETURN ['']
+TRACE:server.py,80:Server.server.ServerSettings.getlist:CALL *("['guest', 'proggers', 'russian', 'pole']",) **{}
+TRACE:server.py,80:Server.server.ServerSettings.getlist:RETURN ['guest', 'proggers', 'russian', 'pole']
+TRACE:server.py,84:Server.server.ServerSettings.load:RETURN None
+TRACE:server.py,52:Server.server.ServerSettings.__init__:RETURN None
+TRACE:server.py,19:Server.server.ServerData.__init__:CALL *() **{}
+TRACE:server.py,19:Server.server.ServerData.__init__:RETURN None
+TRACE:server.py,103:Server.server.Server.__init__:RETURN None
+TRACE:server.py,184:Server.server.Server.run:CALL *() **{}

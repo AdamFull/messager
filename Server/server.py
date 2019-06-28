@@ -27,11 +27,12 @@ class ServerData:
         if not os.path.exists(self.cache_path):
             os.makedirs(self.cache_path)
 
-        if not self.sql_interface.connect(self.database_path):
-            self.sql_interface.connect(self.database_path)
+        self.sql_interface.create_database(self.database_path)
         
-            self.sql_interface.create_table("users", "id INTEGER_PRIMARY_KEY, username TEXT, password TEXT, validation INTEGER, invite_word TEXT, invite_hash TEXT")
-            self.sql_interface.close()
+        self.sql_interface.create_table("users", "id INTEGER_PRIMARY_KEY, username TEXT, password TEXT, validation INTEGER, invite_word TEXT")
+        self.sql_interface.create_table("invite_keys", "id INTEGER_PRIMARY_KEY, username TEXT, invite_hash TEXT")
+        self.sql_interface.close()
+
     def open_db(self, db):
         self.sql_interface.connect(self.data_path + db + ".db")
     
@@ -41,7 +42,15 @@ class ServerData:
             result += random.choice(string.ascii_letters + string.digits + string.punctuation)
         return result
     
-    def validate_user(self, word):
+    def add_user_with_password(self):
+        pass
+    
+    def is_username_exists(self, username):
+        return True if self.sql_interface.find_username("users", "username", username) > 0 else False
+    def get_user_by_name(self, username):
+        return self.sql_interface.find_username("users", username)
+    
+    def validate_user(self, hash_word, username):
         pass
 
 
@@ -136,14 +145,13 @@ class Server:
         if not data == None:
             args = data.split(' ')
     
-    def registration(self, username, password):
-        if self.setting.enable_password:
-            self.server_database.open_db("server_database")
-            invite_word = self.server_database.generate_word()
-            invite_hash = sha256(invite_word.encode('utf-8')).hexdigest()
-            password_hash = sha256(password.encode('utf-8')).hexdigest()
-            self.server_database.sql_interface.insert("users", "username, password, invite_word, invite_hash", 
-                                                    "%s, %s, %s, %s" % (username, password_hash, invite_word, invite_hash))
+    def signup(self, data):
+        username = data[0]
+        password = data[1]
+    
+    def signin(self, data):
+        username = data[0]
+        password = data[1]
 
 
 

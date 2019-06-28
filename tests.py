@@ -12,13 +12,73 @@ def crypro_test():
     assert (decrypted == msg), 'Decryption fail!'
 """
 
-import client
-import server
+from Client import client
+from Server import server
 from threading import Thread
-import time
+import time, random, string, sys
+from Server.sql_interface import SqlInterface
+
 
 TEST_MESSAGE = "Hello, World"
 message_queue = list()
+
+class SqlTests:
+    def __init__(self):
+        self.database_path = 'Server/Data/server_database.db'
+        self.sql_interface = SqlInterface(self.database_path)
+    
+    @staticmethod
+    def __generate_random_names(self, number_of_names):
+        names = []
+        for i in range(number_of_names):
+            temp = ""
+            for j in range(number_of_names * 5):
+                temp += random.choice(string.ascii_letters)
+            names.append(temp)
+        return names
+
+    @staticmethod
+    def __generate_table(self):
+        print("Generating table test with values.")
+        self.sql_interface.create_table("test", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT")
+        names = self.__generate_random_names(self, 5)
+        for name in names:
+            self.sql_interface.insert("test", "name", [name])
+        return names
+        
+
+    def print_tables_in_database(self):
+        print(self.sql_interface.table_list(), "\n")
+    
+    def create_table_test(self):
+        print("Creating table test.")
+        self.__generate_table(self)
+        self.print_tables_in_database()
+    
+    def delete_table_test(self):
+        print("Deleting table test.")
+        self.sql_interface.delete_table("test")
+        self.print_tables_in_database()
+    
+    def get_values_by_column_test(self):
+        print("Get all column values.")
+        self.__generate_table(self)
+        print(self.sql_interface.get("test", "name"))
+        self.delete_table_test()
+    
+    def find_rows_by_value_test(self):
+        print("Find rows by value.")
+        names = self.__generate_table(self)
+        print(self.sql_interface.find("test", "name", names[1]))
+        self.delete_table_test()
+    
+    def fetch_table_data_test(self):
+        print("Fetch all table data.")
+        self.__generate_table(self)
+        print(self.sql_interface.fetch_all("test"))
+        self.delete_table_test()
+
+    
 
 
 def store_messages(raw_data):
@@ -45,6 +105,15 @@ def simple_exchange_test():
 
 
 if __name__ == "__main__":
+    sql_tests = SqlTests()
+    sql_tests.print_tables_in_database
+    sql_tests.create_table_test()
+    sql_tests.delete_table_test()
+    sql_tests.get_values_by_column_test()
+    sql_tests.find_rows_by_value_test()
+    sql_tests.fetch_table_data_test()
+    input("Press enter to continue...")
+
     try:
         simple_exchange_test()
 
