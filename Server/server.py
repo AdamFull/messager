@@ -7,6 +7,7 @@ from protocol import Protocol
 from autologging import logged, traced
 from Server.server_settings import ServerSettings
 from Server.server_database import ServerDatabase
+from Servre.exceptions import LoginError
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -57,28 +58,51 @@ class Server:
         if not data == None:
             args = data.split(' ')
     
-    def signup(self, data):
+    def validate(self, connection):
+        pass
+
+    def signup(self, data, connection):
         username = data[0]
         password = data[1]
+        if self.setting.enable_password:
+            self.server_database.add_user_with_verification(username, password)
+            self.protocol.send("Write server password.", connection[0])
+            data = self.protocol.recv(connection[0])
+            if self.server_database.verificate_user(username, data):
+                return True
+            else:
+                return False
+        else:
+            self.server_database.add_user_without_verification(username, password)
+            return True
     
-    def signin(self, data):
+    '''Надеюсь что это всё работает, но со стороны клиента ещё ничего нет,
+    тесты для server_database написать не успел, но по логике там всё верно.
+    SQL работает исправно, и даже есть ещё место для полёта фантазии,
+    но в основном там всё нужное.
+    Так же нужно дописать обработчик ошибок LoginError, т.к. пока что он просто 
+    вызывает это исключене, но ничего с ним не делает.
+    И на данный момент не реализована варификация, если юзверь неверно ввёл код.
+    Так же нужно посмотреть про передачу медиа через сокет, а потом и потокового видео/аудио.
+    Ну это в версии так 1.0 бета.'''
+    def signin(self, data, connection):
         username = data[0]
         password = data[1]
         if self.server_database.is_user_already_exist(username):
-            password_hash = self.make_hash(password)
+            password_hash = self.server_database.make_hash(password)
             if self.server_database.is_user_verificated(username):
                 if self.server_database.is_passwords_match(username, password_hash):
                     #success connection
                     return True
                 else:
-                    raise Error("Passwords not match.")
+                    raise LoginError("Passwords not match.")
             else:
-                raise Error("User not verificated.")
+                raise LoginError("User not verificated.")
         else:
-            if self.signup([username, password]):
-                self.signin([username, password])
+            if self.signup([username, password], connection):
+                self.signin([username, password], connection)
             else:
-                raise Error("Unknown error.")
+                raise LoginError("Unknown error.")
 
 
 
