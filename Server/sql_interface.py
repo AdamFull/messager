@@ -64,6 +64,17 @@ class SqlInterface:
         self.cursor.execute(query, data)
         self.connection.commit()
     
+    def update(self, table_name, columns, values):
+        cols = columns.replace(" ", "").split(",")
+        query = 'UPDATE %s SET %s WHERE "id" = ?;' % (table_name, ' = ?, '.join(cols) + ' = ?')
+        self.cursor.execute(query, values)
+        self.connection.commit()
+    
+    def delete(self, table_name, id):
+        query = 'DELETE FROM %s WHERE id = ?;' % table_name
+        self.cursor.execute(query, str(id))
+        self.connection.commit()
+    
     def query(self, sql):
         self.cursor.execute(sql)
         self.connection.commit()

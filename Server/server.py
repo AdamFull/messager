@@ -2,103 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import socket as s
-import threading, json, os, configparser
+import threading
 from protocol import Protocol
 from autologging import logged, traced
-import logging, random, string
-from hashlib import sha256
-from Server.sql_interface import SqlInterface
+from Server.server_settings import ServerSettings
+from Server.server_database import ServerDatabase
 
 STATE_READY = 0
 STATE_WORKING = 1
 STATE_STOPPING = 3
-
-@traced
-@logged
-class ServerData:
-    def __init__(self):
-        self.data_path = 'Server/Data/'
-        self.database_path = self.data_path + "server_database.db"
-        self.cache_path = 'Server/Cache/'
-        self.sql_interface = SqlInterface()
-        
-        if not os.path.exists(self.data_path):
-            os.makedirs(self.data_path)
-        if not os.path.exists(self.cache_path):
-            os.makedirs(self.cache_path)
-
-        self.sql_interface.create_database(self.database_path)
-        
-        self.sql_interface.create_table("users", "id INTEGER_PRIMARY_KEY, username TEXT, password TEXT, validation INTEGER, invite_word TEXT")
-        self.sql_interface.create_table("invite_keys", "id INTEGER_PRIMARY_KEY, username TEXT, invite_hash TEXT")
-        self.sql_interface.close()
-
-    def open_db(self, db):
-        self.sql_interface.connect(self.data_path + db + ".db")
-    
-    def generate_word(self):
-        result = ""
-        for i in range(32):
-            result += random.choice(string.ascii_letters + string.digits + string.punctuation)
-        return result
-    
-    def add_user_with_password(self):
-        pass
-    
-    def is_username_exists(self, username):
-        return True if self.sql_interface.find_username("users", "username", username) > 0 else False
-    def get_user_by_name(self, username):
-        return self.sql_interface.find_username("users", username)
-    
-    def validate_user(self, hash_word, username):
-        pass
-
-
-
-@traced
-@logged
-class ServerSettings:
-    def __init__(self):
-        self.config = configparser.ConfigParser()
-        self.config_path = 'Server/config.ini'
-        self.server_ip = '0.0.0.0'
-        self.server_port = 9191
-        self.maximum_users = 100
-        self.enable_password = False
-        self.enable_whitelist = False
-        self.whitelist = []
-        self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
-
-        if os.path.isfile(self.config_path):
-            self.load()
-        else:
-            self.save()
-    
-    def save(self):
-        self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
-        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "server_password" : self.server_password, "enable_whitelist" : self.enable_whitelist,
-                                   "white_list" : self.whitelist, "rooms" : self.server_rooms}
-
-        with open(self.config_path, "w") as config_file:
-            self.config.write(config_file)
-    
-    def update_password(self, new_password):
-        self.server_password = sha256(new_password.encode('utf-8')).hexdigest()
-        self.save()
-    
-    def getlist(self, string):
-        bad_chars = ['[', ']', '\'', ' ']
-        return (''.join(i for i in string if not i in bad_chars)).split(',')
-
-    def load(self):
-        self.config.read(self.config_path)
-        self.server_ip = self.config["NET"].get("server_ip")
-        self.server_port = self.config["NET"].getint("server_port")
-        self.maximum_users = self.config["SETTINGS"].getint("max_slots")
-        self.enable_password = self.config["SETTINGS"].getboolean('enable_password')
-        self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
-        self.whitelist = self.getlist(self.config["SETTINGS"].get('white_list'))
-        self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
 
 
 @traced
@@ -111,7 +23,7 @@ class Server:
 
     def __init__(self):
         self.setting = ServerSettings()
-        self.server_database = ServerData()
+        self.server_database = ServerDatabase()
 
         self.sock.bind((self.setting.server_ip, self.setting.server_port))  # Задаём параметры сокета
         self.sock.listen(self.setting.maximum_users)  # Слушаем сокет
@@ -152,6 +64,21 @@ class Server:
     def signin(self, data):
         username = data[0]
         password = data[1]
+        if self.server_database.is_user_already_exist(username):
+            password_hash = self.make_hash(password)
+            if self.server_database.is_user_verificated(username):
+                if self.server_database.is_passwords_match(username, password_hash):
+                    #success connection
+                    return True
+                else:
+                    raise Error("Passwords not match.")
+            else:
+                raise Error("User not verificated.")
+        else:
+            if self.signup([username, password]):
+                self.signin([username, password])
+            else:
+                raise Error("Unknown error.")
 
 
 

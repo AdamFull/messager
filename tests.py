@@ -77,6 +77,22 @@ class SqlTests:
         self.__generate_table(self)
         print(self.sql_interface.fetch_all("test"))
         self.delete_table_test()
+    
+    def update_row_test(self):
+        print("Update row values.")
+        self.__generate_table(self)
+        print(self.sql_interface.find("test", "id", 1))
+        self.sql_interface.update("test", "name", ['mikhail', 1])
+        print(self.sql_interface.find("test", "id", 1))
+        self.delete_table_test()
+
+    def delete_row_test(self):
+        print("Delete row from table.")
+        self.__generate_table(self)
+        print(self.sql_interface.fetch_all("test"))
+        self.sql_interface.delete("test", 1)
+        print(self.sql_interface.fetch_all("test"))
+        self.delete_table_test()
 
     
 
@@ -112,6 +128,8 @@ if __name__ == "__main__":
     sql_tests.get_values_by_column_test()
     sql_tests.find_rows_by_value_test()
     sql_tests.fetch_table_data_test()
+    sql_tests.update_row_test()
+    sql_tests.delete_row_test()
     input("Press enter to continue...")
 
     try:
