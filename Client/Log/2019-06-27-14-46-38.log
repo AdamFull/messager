@@ -1,9 +1,0 @@
-TRACE:client.py,50:Client.client.Client.__init__:CALL *('vasya', 'localhost', 9191) **{}
-TRACE:client.py,17:Client.client.ClientSetting.__init__:CALL *() **{}
-TRACE:client.py,33:Client.client.ClientSetting.load:CALL *() **{}
-TRACE:client.py,33:Client.client.ClientSetting.load:RETURN None
-TRACE:client.py,17:Client.client.ClientSetting.__init__:RETURN None
-TRACE:client.py,85:Client.client.Client.connect:CALL *('localhost', 9191) **{}
-TRACE:client.py,65:Client.client.Client.listen:CALL *() **{}
-TRACE:client.py,85:Client.client.Client.connect:RETURN True
-TRACE:client.py,50:Client.client.Client.__init__:RETURN None

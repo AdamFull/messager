@@ -1,4 +1,4 @@
-from Server.sql_interface import SqlInterface
+from sql_interface import SqlInterface
 from os import path, makedirs
 from hashlib import sha256
 from random import choice
@@ -6,7 +6,7 @@ from string import ascii_letters, punctuation, digits
 
 class ServerDatabase(SqlInterface):
     def __init__(self):
-        self.data_path = 'Server/Data/'
+        self.data_path = 'Data/'
         self.database_path = self.data_path + "server_database.db"
 
         if not path.exists(self.data_path):
@@ -23,7 +23,7 @@ class ServerDatabase(SqlInterface):
         return True if len(self.find("users", "username", username)) > 0 else False
     
     def is_user_verificated(self, username):
-        return True if True in self.find("users", "username", username)[0] else False
+        return True if self.find("users", "username", username)[0][3] == 1 else False
     
     def is_passwords_match(self, username, password_hash):
         return True if password_hash in self.find("users", "username", username)[0] else False
@@ -38,18 +38,15 @@ class ServerDatabase(SqlInterface):
         return sha256(string.encode('utf-8')).hexdigest()
     
     def add_user_without_verification(self, username, password):
-        password_hash = sha256(password.encode('utf-8')).hexdigest()
-        self.insert("users", "username, password, verification", (username, password_hash, True))
+        self.insert("users", "username, password, verification", (username, password, True))
     
     def add_user_with_verification(self, username, password):
-        password_hash = sha256(password.encode('utf-8')).hexdigest()
         word = self.__generate_key(32)
-        self.insert("users", "username, password, verification, invite_word", (username, password_hash, False, word))
+        self.insert("users", "username, password, verification, invite_word", (username, password, False, word))
         invite_hash = sha256(word.encode('utf-8')).hexdigest()
         self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
     
-    def verificate_user(self, username, invite_word):
-        invite_hash = invite_hash = sha256(invite_word.encode('utf-8')).hexdigest()
+    def verificate_user(self, username, invite_hash):
         if self.is_invite_hash_match(invite_hash):
             self.update("users", "verification", [True, self.get_user_id("users", username)])
             self.update("invite_keys", "invite_hash", ['VERIFICATED', self.get_user_id("invite_keys", username)])

@@ -5,9 +5,9 @@ import socket as s
 import threading
 from protocol import Protocol
 from autologging import logged, traced
-from Server.server_settings import ServerSettings
-from Server.server_database import ServerDatabase
-from Servre.exceptions import LoginError
+from server_settings import ServerSettings
+from server_database import ServerDatabase
+from exceptions import LoginError
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -58,17 +58,19 @@ class Server:
         if not data == None:
             args = data.split(' ')
     
-    def validate(self, connection):
-        pass
+    def verificate(self, username, connection):
+        data = self.protocol.recv(connection[0]).decode('utf-8')
+        if self.server_database.verificate_user(username, data):
+            return True
+        else:
+            return False
 
     def signup(self, data, connection):
         username = data[0]
         password = data[1]
         if self.setting.enable_password:
             self.server_database.add_user_with_verification(username, password)
-            self.protocol.send("Write server password.", connection[0])
-            data = self.protocol.recv(connection[0])
-            if self.server_database.verificate_user(username, data):
+            if self.verificate(username, connection):
                 return True
             else:
                 return False
@@ -86,24 +88,32 @@ class Server:
     Так же нужно посмотреть про передачу медиа через сокет, а потом и потокового видео/аудио.
     Ну это в версии так 1.0 бета.'''
     def signin(self, data, connection):
-        username = data[0]
-        password = data[1]
+        if isinstance(data, (bytes, bytearray)):
+            username, password = data.decode('utf-8').split(',')
+        else:
+            username, password = data[0], data[1]
         if self.server_database.is_user_already_exist(username):
-            password_hash = self.server_database.make_hash(password)
             if self.server_database.is_user_verificated(username):
-                if self.server_database.is_passwords_match(username, password_hash):
+                if self.server_database.is_passwords_match(username, password):
                     #success connection
                     return True
                 else:
-                    raise LoginError("Passwords not match.")
+                    #raise LoginError("Passwords not match.")
+                    return False
             else:
-                raise LoginError("User not verificated.")
+                if self.verificate(username, connection):
+                    self.signin([username, str(password)], connection)
+                    return True
+                else:
+                    #raise LoginError("Varification error.")
+                    return False
         else:
-            if self.signup([username, password], connection):
-                self.signin([username, password], connection)
+            if self.signup([username, str(password)], connection):
+                self.signin([username, str(password)], connection)
+                return True
             else:
-                raise LoginError("Unknown error.")
-
+                #raise LoginError("Unknown error.")
+                return False
 
 
     def parse_client_command(self, data, client_index):
@@ -128,22 +138,21 @@ class Server:
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
             room = self.setting.server_rooms[0]
-            client_data = [c, a, room]
-            self.connections.append(client_data)
-            self_index = self.connections.index(client_data)
+            client_data = [c, a, room, False]
+            if self.signin(self.protocol.recv(client_data[0]), client_data):
+                self.protocol.send("success", client_data[0])
+                self.connections.append(client_data)
+                self_index = self.connections.index(client_data)
 
-            self.threads.append(threading.Thread(target=self.handler, args=[self_index]))  # Отдельный поток для хандлера
-            self.threads[len(self.threads) - 1].daemon = True
-            self.threads[len(self.threads) - 1].start()
-            print(str(a[0]) + ':' + str(a[1]), "connected", len(self.connections))
+                self.threads.append(threading.Thread(target=self.handler, args=[self_index]))  # Отдельный поток для хандлера
+                self.threads[len(self.threads) - 1].daemon = True
+                self.threads[len(self.threads) - 1].start()
+                print(str(a[0]) + ':' + str(a[1]), "connected", len(self.connections))
+            else:
+                print('Lose connection.')
     
     def stop(self):
         self.state = STATE_STOPPING
         for thread in self.threads:
             thread.do_run = False
             thread.join()
-
-
-if __name__ == "__main__":
-    srv = Server()
-    srv.run()

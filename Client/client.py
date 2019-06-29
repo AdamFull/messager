@@ -7,6 +7,7 @@ import json, sys, struct, os
 from protocol import Protocol
 from autologging import logged, traced
 import logging
+from hashlib import sha256
 
 #This class contains all client settings
 #- loads settings from file
@@ -15,8 +16,9 @@ import logging
 @logged
 class ClientSetting:
     def __init__(self):
-        self.config_path = 'Client/config/user.conf'
-        self.nickname = 'Jimmy'
+        self.config_path = 'config/user.conf'
+        self.username = 'Jonh'
+        self.nickname = 'Wick'
         self.password = 'password'
         self.server_ip = 'localhost'
         self.port = 9191
@@ -33,6 +35,7 @@ class ClientSetting:
     def load(self):
         with open(self.config_path, "r") as read_f:
             data = json.load(read_f)
+            self.username = data["username"]
             self.nickname = data["nickname"]
             self.password = data["password"]
             self.server_ip = data["ip"]
@@ -40,18 +43,15 @@ class ClientSetting:
     
     def save(self):
         with open(self.config_path, "w") as write_f:
-            data = {"nickname" : self.nickname, "password" : self.password, "ip" : self.server_ip, "port" : self.port}
+            data = {"username" : self.username, "nickname" : self.nickname ,"password" : self.password, "ip" : self.server_ip, "port" : self.port}
             json.dump(data, write_f)
 
 @traced
 @logged
 class Client:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)
-    def __init__(self, nickname='Jimmy', address='localhost', port=9191, receive_callback=None):
+    def __init__(self, receive_callback=None):
         self.setting = ClientSetting()
-        self.setting.nickname = nickname
-        self.setting.server_ip = address
-        self.setting.port = port
 
         self.threads = list()
 
@@ -59,8 +59,7 @@ class Client:
         self.rcv_output = receive_callback
 
         self.isConnected = False
-
-        self.connect(self.setting.server_ip, self.setting.port)
+        self.isLogined = False
 
     def listen(self):
         current_thread = threading.current_thread()
@@ -81,6 +80,18 @@ class Client:
             else:
                 print(data)
 
+    def login(self, username, password):
+        print("Start login in.")
+        self.protocol.send(','.join([username, sha256(password.encode('utf-8')).hexdigest()]), self.sock)
+        login_result = self.protocol.recv(self.sock).decode('utf-8')
+        if login_result == 'success':
+            return True
+        else:
+            return False
+    
+    def send_verification_key(self, key):
+        key_hash = sha256(key.encode('utf-8')).hexdigest()
+        self.protocol.send(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):
         if self.isConnected:
@@ -103,24 +114,31 @@ class Client:
 
         self.protocol = Protocol()
 
-        os.system('cls')
-
-        print("Current connection: %s:%s" % (ip, port))
-        self.isConnected = True
-        self.threads.append(threading.Thread(target=self.listen))
-        self.threads[0].daemon = True
-        self.threads[0].do_run = True
-        self.threads[0].start()
-
-        return True
+        if self.login(self.setting.username, self.setting.password):
+            self.isLogined = True
+            os.system('cls')
+            print("Current connection: %s:%s" % (ip, port))
+            self.isConnected = True
+            self.threads.append(threading.Thread(target=self.listen))
+            self.threads[0].daemon = True
+            self.threads[0].do_run = True
+            self.threads[0].start()
+            return True
+        else:
+            return False
     
     def disconnect(self):
         print("Disconnecting from server.")
         self.isConnected = False
+        self.isLogined = False
         self.threads[0].do_run = False
         self.sock.close()
         self.threads[0].join()
         self.threads.clear()
+    
+    def run(self):
+        self.connect(self.setting.server_ip, self.setting.port)
+    
         
     def server_command(self, command):
         self.protocol.send(command, self.sock)
@@ -139,9 +157,4 @@ class Client:
         self.setting.save()
     
     def close(self):
-        self.sock.detach()
-
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        clt = Client(sys.argv[1], 'localhost', 9191)
+        self.sock.close()

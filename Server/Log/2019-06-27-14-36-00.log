@@ -1,9 +1,0 @@
-TRACE:server.py,62:Server.server.Server.__init__:CALL *() **{}
-TRACE:server.py,29:Server.server.ServerSettings.__init__:CALL *() **{}
-TRACE:server.py,41:Server.server.ServerSettings.load:CALL *() **{}
-TRACE:server.py,41:Server.server.ServerSettings.load:RETURN None
-TRACE:server.py,29:Server.server.ServerSettings.__init__:RETURN None
-TRACE:server.py,62:Server.server.Server.__init__:RETURN None
-TRACE:server.py,110:Server.server.Server.run:CALL *() **{}
-TRACE:server.py,70:Server.server.Server.handler:CALL *(0,) **{}
-TRACE:server.py,70:Server.server.Server.handler:RETURN None

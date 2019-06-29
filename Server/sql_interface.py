@@ -9,7 +9,7 @@ class SqlInterface:
     
     def connect(self, dbname):
         try:
-            self.connection = sqlite3.connect(dbname)
+            self.connection = sqlite3.connect(dbname, check_same_thread=False)
             self.cursor = self.connection.cursor()
             return True
         except sqlite3.Error as e:

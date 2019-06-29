@@ -5,7 +5,7 @@ from os.path import isfile
 class ServerSettings:
     def __init__(self):
         self.config = ConfigParser()
-        self.config_path = 'Server/config.ini'
+        self.config_path = 'config.ini'
         self.server_ip = '0.0.0.0'
         self.server_port = 9191
         self.maximum_users = 100
