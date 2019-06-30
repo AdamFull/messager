@@ -13,6 +13,7 @@ def crypro_test():
 """
 
 from Client import client
+from Client import encryption
 from Server import server
 from threading import Thread
 import time, random, string, sys
@@ -101,14 +102,19 @@ def store_messages(raw_data):
     print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
     message_queue.append(raw_data)
 
+def RSA_test():
+    rsa_class = encryption.RSACrypt()
+    print("Public key: ", rsa_class.get_pub())
+    print("Private key: ", rsa_class.get_priv())
+
 
 def simple_exchange_test():
     srv = server.Server()
     server_thread = Thread(target=srv.run)
     server_thread.start()
 
-    cli1 = client.Client(nickname="cli1", receive_callback=store_messages)
-    cli2 = client.Client(nickname="cli2", receive_callback=store_messages)
+    cli1 = client.Client(receive_callback=store_messages)
+    cli2 = client.Client(receive_callback=store_messages)
 
     message_queue.clear()
 
