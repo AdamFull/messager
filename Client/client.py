@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import socket as s
-import threading
-import json, sys, struct, os
+import threading, json, os, logging
 from protocol import Protocol
 from autologging import logged, traced
-import logging
 from hashlib import sha256
+from encryption import AESCrypt
 
 #This class contains all client settings
 #- loads settings from file
@@ -61,33 +60,45 @@ class Client:
         self.isConnected = False
         self.isLogined = False
 
+    def iscrypted(self, data):
+        try:
+            data.decode('utf-8')
+            return False
+        except Exception:
+            return True
+
     def listen(self):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
             try:
                 data = self.protocol.recv(self.sock)
+
             except Exception:
                 os.system('cls')
                 print('Current connection: none.')
                 break
 
-            if data.decode('utf-8')[0] == '{':
-                raw_data = json.loads(data)
+            if self.iscrypted(data):
+                raw_data = json.loads(self.crypto.decrypt(data))
                 if self.rcv_output:
                     self.rcv_output(raw_data)
                 else:
                     print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
             else:
-                print(data)
+                print(data.decode('utf-8'))
 
     def login(self, username, password):
         print("Start login in.")
         self.protocol.send(','.join([username, sha256(password.encode('utf-8')).hexdigest()]), self.sock)
-        login_result = self.protocol.recv(self.sock).decode('utf-8')
-        if login_result == 'success':
-            return True
-        else:
+
+        try:
+            login_result = self.protocol.recv(self.sock)
+        except Exception:
+            print('Server lost connection.')
             return False
+        self.crypto = AESCrypt(login_result)
+        return True
+        
     
     def send_verification_key(self, key):
         key_hash = sha256(key.encode('utf-8')).hexdigest()
@@ -145,7 +156,7 @@ class Client:
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
-        raw_data = json.dumps(msg_data, ensure_ascii=False)
+        raw_data = self.crypto.encrypt(json.dumps(msg_data, ensure_ascii=False).encode('utf-8'))
         self.protocol.send(raw_data, self.sock)
         
 

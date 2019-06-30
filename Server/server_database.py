@@ -28,8 +28,8 @@ class ServerDatabase(SqlInterface):
     def is_passwords_match(self, username, password_hash):
         return True if password_hash in self.find("users", "username", username)[0] else False
         
-    def is_invite_hash_match(self, invite_hash):
-        return True if len(self.find("invite_keys", "invite_hash", invite_hash)) > 0 else False
+    def is_invite_hash_match(self, username, invite_hash):
+        return True if self.find("invite_keys", "username", username)[0][2] == invite_hash else False
     
     def get_user_id(self, table_name, username):
         return self.find(table_name, "username", username)[0][0]
@@ -47,7 +47,7 @@ class ServerDatabase(SqlInterface):
         self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
     
     def verificate_user(self, username, invite_hash):
-        if self.is_invite_hash_match(invite_hash):
+        if self.is_invite_hash_match(username, invite_hash):
             self.update("users", "verification", [True, self.get_user_id("users", username)])
             self.update("invite_keys", "invite_hash", ['VERIFICATED', self.get_user_id("invite_keys", username)])
             return True

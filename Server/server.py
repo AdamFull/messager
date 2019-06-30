@@ -30,15 +30,15 @@ class Server:
         self.sock.listen(self.setting.maximum_users)  # Слушаем сокет
         self.state = STATE_READY
         self.protocol = Protocol()
+        self.public_key = 'hello_world_mf'
 
     def handler(self, client_index):
         thread = threading.current_thread()
-        self_data = self.connections[client_index]
         while self.state == STATE_WORKING and getattr(thread, "do_run", True):
             try:
                 data = self.protocol.recv(self.connections[client_index][0])  # Читаем клиент
                 self.parse_client_command(data, client_index)
-
+                self_data = self.connections[client_index]
             except s.error as e:
                 if e.errno == s.errno.ECONNRESET:
                     slef_index = self.connections.index(self_data)
@@ -49,7 +49,6 @@ class Server:
                 else:
                     print(e)
                     raise
-            
             for connection in self.connections:
                 if connection[2] == self.connections[client_index][2] and connection != self.connections[client_index]:
                     self.protocol.send(data, connection[0])  # Отправляем всем клиентам в этой же комнате
@@ -59,11 +58,13 @@ class Server:
             args = data.split(' ')
     
     def verificate(self, username, connection):
-        data = self.protocol.recv(connection[0]).decode('utf-8')
-        if self.server_database.verificate_user(username, data):
-            return True
-        else:
+        try:
+            data = self.protocol.recv(connection[0]).decode('utf-8')
+        except Exception:
+            print('Client lost connection.')
             return False
+            
+        return True if self.server_database.verificate_user(username, data) else False
 
     def signup(self, data, connection):
         username = data[0]
@@ -78,15 +79,6 @@ class Server:
             self.server_database.add_user_without_verification(username, password)
             return True
     
-    '''Надеюсь что это всё работает, но со стороны клиента ещё ничего нет,
-    тесты для server_database написать не успел, но по логике там всё верно.
-    SQL работает исправно, и даже есть ещё место для полёта фантазии,
-    но в основном там всё нужное.
-    Так же нужно дописать обработчик ошибок LoginError, т.к. пока что он просто 
-    вызывает это исключене, но ничего с ним не делает.
-    И на данный момент не реализована варификация, если юзверь неверно ввёл код.
-    Так же нужно посмотреть про передачу медиа через сокет, а потом и потокового видео/аудио.
-    Ну это в версии так 1.0 бета.'''
     def signin(self, data, connection):
         if isinstance(data, (bytes, bytearray)):
             username, password = data.decode('utf-8').split(',')
@@ -117,8 +109,17 @@ class Server:
 
 
     def parse_client_command(self, data, client_index):
-        if not data == None and "server" in data.decode('utf-8'):
+        try:
+            string_data = data.decode('utf-8')
+        except Exception:
+            return
+        if not data == None and "server" in string_data:
             args = data.decode('utf-8').split(' ')
+            if len(args) > 1:
+                command = args[1]
+                if command == 'rooms':
+                    self.protocol.send(','.join(self.setting.server_rooms), self.connections[client_index][0])
+                    return
             if len(args) > 2:
                 command = args[1]
                 if command == 'chroom':
@@ -130,26 +131,36 @@ class Server:
         if room_id in self.setting.server_rooms:
             last = self.connections[client_index]
             self.connections[client_index] = [last[0], last[1], room_id]
+            for connection in self.connections:
+                if connection[2] == room_id:
+                    self.protocol.send("%s connected to room %s." % (self.connections[client_index][1][0], room_id), connection[0])
         else:
             self.protocol.send('Room %s not found.' % room_id, self.connections[client_index][0])
+
+    def connect(self, client_data):
+        if self.signin(self.protocol.recv(client_data[0]), client_data):
+            self.protocol.send(self.public_key, client_data[0])
+            self.connections.append(client_data)
+            self_index = self.connections.index(client_data)
+
+            self.threads.append(threading.Thread(target=self.handler, args=[self_index]))  # Отдельный поток для хандлера
+            self.threads[len(self.threads) - 1].daemon = True
+            self.threads[len(self.threads) - 1].start()
+            print(str(client_data[1][0]) + ':' + str(client_data[1][1]), "connected", len(self.connections))
+        else:
+            print('Connection denied.')
+            client_data[0].close()
 
     def run(self):
         self.state = STATE_WORKING
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
             room = self.setting.server_rooms[0]
-            client_data = [c, a, room, False]
-            if self.signin(self.protocol.recv(client_data[0]), client_data):
-                self.protocol.send("success", client_data[0])
-                self.connections.append(client_data)
-                self_index = self.connections.index(client_data)
+            client_data = [c, a, room]
+            autorisation_thread = threading.Thread(target=self.connect, args=[client_data])
+            autorisation_thread.start()
 
-                self.threads.append(threading.Thread(target=self.handler, args=[self_index]))  # Отдельный поток для хандлера
-                self.threads[len(self.threads) - 1].daemon = True
-                self.threads[len(self.threads) - 1].start()
-                print(str(a[0]) + ':' + str(a[1]), "connected", len(self.connections))
-            else:
-                print('Lose connection.')
+            
     
     def stop(self):
         self.state = STATE_STOPPING
