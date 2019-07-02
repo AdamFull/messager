@@ -42,6 +42,9 @@ class AESCrypt:
         with open(path, 'wb') as file:
             file.write(enc)
             file.close()
+    
+    def salt(self, length=32):
+        return "\x00" + urandom(length) + "\x00"
 
 class RSACrypt:
     def __init__(self, key=None):

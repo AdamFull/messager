@@ -6,7 +6,6 @@ import threading
 from protocol import Protocol
 from autologging import logged, traced
 from server_database import ServerDatabase, ServerSettings
-from exceptions import LoginError
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -29,14 +28,14 @@ class Server:
         self.sock.listen(self.setting.maximum_users)  # Слушаем сокет
         self.state = STATE_READY
         self.protocol = Protocol()
-        self.public_key = 'hello_world_mf'
+        self.aes_key = self.setting.aes_key()
 
-    def handler(self, client_index):
+    def __handler(self, client_index):
         thread = threading.current_thread()
         while self.state == STATE_WORKING and getattr(thread, "do_run", True):
             try:
                 data = self.protocol.recv(self.connections[client_index][0])  # Читаем клиент
-                self.parse_client_command(data, client_index)
+                self.__parse_client_command(data, client_index)
                 self_data = self.connections[client_index]
             except s.error as e:
                 if e.errno == s.errno.ECONNRESET:
@@ -52,12 +51,14 @@ class Server:
                 if connection[2] == self.connections[client_index][2] and connection != self.connections[client_index]:
                     self.protocol.send(data, connection[0])  # Отправляем всем клиентам в этой же комнате
     
-    def parse_server_command(self, data):
+    def __parse_server_command(self, data):
         if not data == None:
             args = data.split(' ')
     
-    def verificate(self, username, connection):
+    def __verificate(self, username, connection):
         try:
+            # We are waiting for the code word from the user
+            self.protocol.send("verification", connection[0])
             data = self.protocol.recv(connection[0]).decode('utf-8')
         except Exception:
             print('Client lost connection.')
@@ -65,49 +66,63 @@ class Server:
             
         return True if self.server_database.verificate_user(username, data) else False
 
-    def signup(self, data, connection):
+    # User registration on the server
+    def __signup(self, data, connection):
         username = data[0]
-        password = data[1]
+        public_key = data[1]
         if self.setting.enable_password:
-            self.server_database.add_user_with_verification(username, password)
-            if self.verificate(username, connection):
+            self.server_database.add_user_with_verification(username, public_key)
+            if self.__verificate(username, connection):
                 return True
             else:
                 return False
         else:
-            self.server_database.add_user_without_verification(username, password)
+            self.server_database.add_user_without_verification(username, public_key)
             return True
-    
-    def signin(self, data, connection):
-        if isinstance(data, (bytes, bytearray)):
-            username, password = data.decode('utf-8').split(',')
+
+    # User authorization on the server
+    def _signin(self, connection, data=None):
+        '''This method is responsible for authorizing the client if it was registered,\n 
+        and for registering if the client is not found.'''
+        if not data:
+            if self.protocol.recv(connection[0]).decode('utf-8') == "wanna_connect":
+                self.protocol.send("server_puplic_key", connection[0])
+                self.protocol.send(self.setting.public_key, connection[0])
+                self.protocol.send("userdata", connection[0])
+                data = self.protocol.recv(connection[0])
+                username, public_key = data.decode('utf-8').split(',')
         else:
-            username, password = data[0], data[1]
+            username, public_key = data[0], data[1]
+
         if self.server_database.is_user_already_exist(username):
             if self.server_database.is_user_verificated(username):
-                if self.server_database.is_passwords_match(username, password):
-                    #success connection
+                if self.server_database.is_keys_match(username, public_key):
+                    self.protocol.send("success", connection[0])
+                    key = self.setting.encrypt_key(self.aes_key, public_key)
+                    self.protocol.send(key, connection[0])
                     return True
                 else:
-                    #raise LoginError("Passwords not match.")
+                    self.protocol.send('key_error', connection[0])
                     return False
             else:
-                if self.verificate(username, connection):
-                    self.signin([username, str(password)], connection)
+                if self.__verificate(username, connection):
+                    self._signin(connection, [username, str(public_key)])
                     return True
                 else:
-                    #raise LoginError("Varification error.")
+                    self.protocol.send('verification_error')
                     return False
         else:
-            if self.signup([username, str(password)], connection):
-                self.signin([username, str(password)], connection)
+            if self.__signup([username, str(public_key)], connection):
+                self._signin(connection, [username, str(public_key)])
                 return True
             else:
-                #raise LoginError("Unknown error.")
+                # Unknown error.
                 return False
 
 
-    def parse_client_command(self, data, client_index):
+
+    def __parse_client_command(self, data, client_index):
+        '''This method is responsible for processing commands from the client.'''
         try:
             string_data = data.decode('utf-8')
         except Exception:
@@ -122,11 +137,12 @@ class Server:
             if len(args) > 2:
                 command = args[1]
                 if command == 'chroom':
-                    self.change_room(args[2], client_index)
+                    self.__change_room(args[2], client_index)
             else:
                 self.protocol.send("Not Enought arguments.",self.connections[client_index][0])
 
-    def change_room(self, room_id, client_index):
+    def __change_room(self, room_id, client_index):
+        '''This method allows the user to switch between rooms.'''
         if room_id in self.setting.server_rooms:
             last = self.connections[client_index]
             self.connections[client_index] = [last[0], last[1], room_id]
@@ -136,13 +152,13 @@ class Server:
         else:
             self.protocol.send('Room %s not found.' % room_id, self.connections[client_index][0])
 
-    def connect(self, client_data):
-        if self.signin(self.protocol.recv(client_data[0]), client_data):
-            self.protocol.send(self.public_key, client_data[0])
+    def __connect(self, client_data):
+        '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
+        if self._signin(client_data):
             self.connections.append(client_data)
             self_index = self.connections.index(client_data)
 
-            self.threads.append(threading.Thread(target=self.handler, args=[self_index]))  # Отдельный поток для хандлера
+            self.threads.append(threading.Thread(target=self.__handler, args=[self_index]))  # Отдельный поток для хандлера
             self.threads[len(self.threads) - 1].daemon = True
             self.threads[len(self.threads) - 1].start()
             print(str(client_data[1][0]) + ':' + str(client_data[1][1]), "connected", len(self.connections))
@@ -150,13 +166,15 @@ class Server:
             print('Connection denied.')
             client_data[0].close()
 
+    # Server startup method
     def run(self):
+        '''This method handles connection attempts.'''
         self.state = STATE_WORKING
         while self.state == STATE_WORKING:
             c, a = self.sock.accept()
             room = self.setting.server_rooms[0]
             client_data = [c, a, room]
-            autorisation_thread = threading.Thread(target=self.connect, args=[client_data])
+            autorisation_thread = threading.Thread(target=self.__connect, args=[client_data])
             autorisation_thread.start()
 
             

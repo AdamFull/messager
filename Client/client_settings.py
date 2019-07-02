@@ -8,9 +8,24 @@ from hashlib import sha256
 #- loads settings from file
 #- saves settings to file
 
+class Response:
+    def __init__(self, recv):
+        self.recv = recv
+
+    def response(self):
+        if not self.recv:
+            return "empty_response"
+        else:
+            self.recv = self.recv.decode('utf-8')
+            if self.recv == "verificalion":
+                return "verificalion_response"
+
+
 class ClientSetting:
     def __init__(self, args=None):
         self.config_path = 'config/user.conf'
+        self.server_public_key = b''
+        self.aes_session_key = b''
 
         self.config_dir = dirname(abspath(self.config_path))
         if not exists(self.config_dir):
@@ -42,6 +57,7 @@ class ClientSetting:
             self.server_ip = data["ip"]
             self.port = data["port"]
             self.RSA = RSACrypt(self.private_key)
+            self.public_key = self.RSA.export_public()
     
     def load_key(self):
         with open('%s/private.pem' % self.config_dir, "rb") as pem_file:

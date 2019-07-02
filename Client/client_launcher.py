@@ -68,9 +68,9 @@ if __name__ == "__main__":
         input_msg = input('>>')
         if net_client.isLogined:
             if not input_msg is '':
-                if(input_msg[0] == "/"):
-                    temp.parse_command(input_msg.split("/")[1])
-                else:
-                    net_client.send(input_msg)
+                net_client.send(input_msg)
         else:
-            net_client.send_verification_key(input_msg)
+            if(input_msg[0] == "/"):
+                temp.parse_command(input_msg.split("/")[1])
+            else:
+                pass

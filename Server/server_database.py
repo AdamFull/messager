@@ -5,6 +5,7 @@ from os.path import isfile
 from hashlib import sha256
 from random import choice
 from string import ascii_letters, punctuation, digits
+from encryption import AESCrypt, RSACrypt
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -106,7 +107,7 @@ class ServerDatabase(SqlInterface):
             makedirs(self.data_path)
 
         self.create_database(self.database_path)
-        self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, password TEXT, verification INTEGER, invite_word TEXT")
+        self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
 
     def __generate_key(self, length):
@@ -118,8 +119,8 @@ class ServerDatabase(SqlInterface):
     def is_user_verificated(self, username):
         return True if self.find("users", "username", username)[0][3] == 1 else False
     
-    def is_passwords_match(self, username, password_hash):
-        return True if password_hash in self.find("users", "username", username)[0] else False
+    def is_keys_match(self, username, public_key):
+        return True if public_key in self.find("users", "username", username)[0] else False
         
     def is_invite_hash_match(self, username, invite_hash):
         return True if self.find("invite_keys", "username", username)[0][2] == invite_hash else False
@@ -130,12 +131,12 @@ class ServerDatabase(SqlInterface):
     def make_hash(self, string):
         return sha256(string.encode('utf-8')).hexdigest()
     
-    def add_user_without_verification(self, username, password):
-        self.insert("users", "username, password, verification", (username, password, True))
+    def add_user_without_verification(self, username, public_key):
+        self.insert("users", "username, public_key, verification", (username, public_key, True))
     
-    def add_user_with_verification(self, username, password):
+    def add_user_with_verification(self, username, public_key):
         word = self.__generate_key(32)
-        self.insert("users", "username, password, verification, invite_word", (username, password, False, word))
+        self.insert("users", "username, public_key, verification, invite_word", (username, public_key, False, word))
         invite_hash = sha256(word.encode('utf-8')).hexdigest()
         self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
     
@@ -158,12 +159,23 @@ class ServerSettings:
         self.enable_whitelist = False
         self.whitelist = []
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
+        self.private_key = b''
+        self.public_key = b''
 
         if isfile(self.config_path):
+            if not isfile("private.pem"):
+                self.private_key = RSACrypt().export_private()
+                self.save_key()
             self.load()
         else:
             self.save()
-    
+
+    def aes_key(self, length=32):
+        return sha256(''.join(choice(ascii_letters+punctuation+digits) for i in range(length)).encode('utf-8')).hexdigest()
+
+    def encrypt_key(self, key, user_key):
+        return RSACrypt().encrypt(key, user_key)
+
     def save(self):
         self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
         self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "server_password" : self.server_password, "enable_whitelist" : self.enable_whitelist,
@@ -171,6 +183,7 @@ class ServerSettings:
 
         with open(self.config_path, "w") as config_file:
             self.config.write(config_file)
+        self.save_key()
     
     def update_password(self, new_password):
         self.server_password = sha256(new_password.encode('utf-8')).hexdigest()
@@ -178,6 +191,15 @@ class ServerSettings:
     
     def getlist(self, string):
         return (''.join(i for i in string if not i in ['[', ']', '\'', ' '])).split(',')
+    
+    def load_key(self):
+        with open('private.pem', "rb") as pem_file:
+            return AESCrypt(sha256(self.server_ip.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+
+    def save_key(self):
+        with open('private.pem', "wb") as pem_file:
+            key = AESCrypt(sha256(self.server_ip.encode('utf-8')).hexdigest()).encrypt(self.private_key)
+            pem_file.write(key)
 
     def load(self):
         self.config.read(self.config_path)
@@ -188,3 +210,6 @@ class ServerSettings:
         self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
         self.whitelist = self.getlist(self.config["SETTINGS"].get('white_list'))
         self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
+        self.private_key = self.load_key()
+        self.RSA = RSACrypt(self.private_key)
+        self.public_key = self.RSA.export_public()

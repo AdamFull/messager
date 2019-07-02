@@ -52,17 +52,34 @@ class Client:
             else:
                 print(data.decode('utf-8'))
 
-    def login(self, username, password):
-        print("Start login in.")
-        self.protocol.send(','.join([username, sha256(password.encode('utf-8')).hexdigest()]), self.sock)
-
-        try:
-            login_result = self.protocol.recv(self.sock)
-        except Exception:
-            print('Server lost connection.')
-            return False
-        self.crypto = AESCrypt(login_result)
-        return True
+    def login(self):
+        self.protocol.send("wanna_connect", self.sock) # Sending connection request to server.
+        while True:
+            response = self.protocol.recv(self.sock)
+            print(response)
+            if response:
+                response = response.decode('utf-8')
+                if response == "success":
+                    login_result = self.protocol.recv(self.sock)
+                    self.setting.aes_session_key = self.setting.RSA.decrypt(login_result.decode('utf-8'))
+                    self.crypto = AESCrypt(self.setting.aes_session_key)
+                    return True
+                elif response == "verification":
+                    self.send_verification_key(input("Verification key: "))
+                elif response == "key_error":
+                    print("Keys don't match")
+                    return False
+                elif response == "userdata":
+                    self.protocol.send(','.join([self.setting.username, self.setting.public_key.decode('utf-8')]), self.sock)
+                elif response == "server_puplic_key":
+                    self.setting.server_public_key = self.protocol.recv(self.sock).decode('utf-8') # Waiting server public rsa key.
+                else:
+                    return False
+            
+        else:
+            print("No server response.")
+        return False
+        
         
     
     def send_verification_key(self, key):
@@ -90,7 +107,7 @@ class Client:
 
         self.protocol = Protocol()
 
-        if self.login(self.setting.username, self.setting.password):
+        if self.login():
             self.isLogined = True
             system('cls')
             print("Current connection: %s:%s" % (ip, port))
@@ -133,4 +150,4 @@ class Client:
         self.setting.save()
     
     def close(self):
-        self.sock.close()
+        self.sock.detach()
