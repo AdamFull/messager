@@ -52,8 +52,10 @@ if __name__ == "__main__":
 
     parsed = parser.parse_args()
 
-    cli_set = ClientSetting([parsed.user_name, parsed.nick_name, parsed.password,
-    parsed.server_ip, parsed.server_port])
+    data = [parsed.user_name, parsed.nick_name, parsed.password,
+    parsed.server_ip, parsed.server_port]
+
+    cli_set = ClientSetting([arg for arg in data if arg])
     
     cli_set.save()
 

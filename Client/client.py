@@ -43,12 +43,14 @@ class Client:
                 system('cls')
                 print('Current connection: none.')
                 break
-
-            raw_data = loads(self.crypto.decrypt(data))
-            if self.rcv_output:
-                self.rcv_output(raw_data)
+            if self.iscrypted(data):
+                raw_data = loads(self.crypto.decrypt(data))
+                if self.rcv_output:
+                    self.rcv_output(raw_data)
+                else:
+                    print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
             else:
-                print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
+                print(data.decode('utf-8'))
 
     def login(self, username, password):
         print("Start login in.")

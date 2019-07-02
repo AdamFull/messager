@@ -5,8 +5,7 @@ import socket as s
 import threading
 from protocol import Protocol
 from autologging import logged, traced
-from server_settings import ServerSettings
-from server_database import ServerDatabase
+from server_database import ServerDatabase, ServerSettings
 from exceptions import LoginError
 
 STATE_READY = 0
