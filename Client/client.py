@@ -11,12 +11,22 @@ from hashlib import sha256
 from encryption import AESCrypt, RSACrypt
 from client_settings import ClientSetting
 
+class STATEMENT:
+    def __init__(self):
+        self.DISCONNECTED = 0
+        self.CONNECTING = 1
+        self.CONNECTED = 2
+        self.VERIFICATION = 3
+
 @traced
 @logged
 class Client:
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)
     def __init__(self, receive_callback=None):
         self.setting = ClientSetting()
+
+        self.STATE = STATEMENT().DISCONNECTED
+        self.current_message = ''
 
         self.threads = list()
 
@@ -41,22 +51,21 @@ class Client:
 
             except Exception:
                 system('cls')
-                print('Current connection: none.')
+                self.current_message = 'Current connection: none.'
                 break
             if self.iscrypted(data):
                 raw_data = loads(self.crypto.decrypt(data))
                 if self.rcv_output:
                     self.rcv_output(raw_data)
                 else:
-                    print("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]))
+                   self.current_message = "[%s]: %s" % (raw_data["nickname"], raw_data["msg"])
             else:
-                print(data.decode('utf-8'))
+                self.current_message = data.decode('utf-8')
 
     def login(self):
         self.protocol.send("wanna_connect", self.sock) # Sending connection request to server.
         while True:
             response = self.protocol.recv(self.sock)
-            print(response)
             if response:
                 response = response.decode('utf-8')
                 if response == "success":
@@ -65,9 +74,10 @@ class Client:
                     self.crypto = AESCrypt(self.setting.aes_session_key)
                     return True
                 elif response == "verification":
-                    self.send_verification_key(input("Verification key: "))
+                    self.STATE = STATEMENT().VERIFICATION
+                    #self.send_verification_key(input("Verification key: "))
                 elif response == "key_error":
-                    print("Keys don't match")
+                    self.current_message = "Keys don't match"
                     return False
                 elif response == "userdata":
                     self.protocol.send(','.join([self.setting.username, self.setting.public_key.decode('utf-8')]), self.sock)
@@ -76,8 +86,12 @@ class Client:
                 else:
                     return False
             
-        else:
-            print("No server response.")
+            else:
+                if self.STATE == STATEMENT().VERIFICATION:
+                    self.current_message = "Waiting varification key."
+                else:
+                    self.current_message = "Waiting server response."
+                continue
         return False
         
         
@@ -87,11 +101,11 @@ class Client:
         self.protocol.send(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):
-        if self.isConnected:
-            print("Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port))
+        if self.STATE == STATEMENT().CONNECTED:
+            self.current_message = "Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port)
             return False
-
-        print("Trying to connect: %s:%s" % (ip, port))
+        self.STATE = STATEMENT().CONNECTING
+        self.current_message = "Trying to connect: %s:%s" % (ip, port)
         try:
             self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
             self.sock.connect((ip, port))
@@ -100,7 +114,7 @@ class Client:
                 attempt = attempts-1
                 return self.connect(ip, port, attempt)
             else:
-                print('Connection failed.')
+                self.current_message = 'Connection failed.'
                 return False
         self.setting.server_ip = ip
         self.setting.port = port
@@ -110,8 +124,8 @@ class Client:
         if self.login():
             self.isLogined = True
             system('cls')
-            print("Current connection: %s:%s" % (ip, port))
-            self.isConnected = True
+            self.current_message = "Current connection: %s:%s" % (ip, port)
+            self.STATE = STATEMENT().CONNECTED
             self.threads.append(threading.Thread(target=self.listen))
             self.threads[0].daemon = True
             self.threads[0].do_run = True
@@ -121,8 +135,8 @@ class Client:
             return False
     
     def disconnect(self):
-        print("Disconnecting from server.")
-        self.isConnected = False
+        self.current_message = "Disconnecting from server."
+        self.STATE = STATEMENT().DISCONNECTED
         self.isLogined = False
         self.threads[0].do_run = False
         self.sock.close()

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Messager</class>
+ <widget class="QMainWindow" name="Messager">
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>400</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2">
+    <property name="spacing">
+     <number>1</number>
+    </property>
+    <property name="leftMargin">
+     <number>1</number>
+    </property>
+    <property name="topMargin">
+     <number>1</number>
+    </property>
+    <property name="rightMargin">
+     <number>1</number>
+    </property>
+    <property name="bottomMargin">
+     <number>1</number>
+    </property>
+    <item>
+     <widget class="QListWidget" name="room_list"/>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="chat_layout">
+      <property name="spacing">
+       <number>1</number>
+      </property>
+      <item>
+       <widget class="QTextBrowser" name="chat_box"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="messag_area">
+        <item>
+         <widget class="QLineEdit" name="message_box"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="send_message">
+          <property name="text">
+           <string>PushButton</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuConnections">
+    <property name="title">
+     <string>Connections</string>
+    </property>
+    <addaction name="actionConnect"/>
+    <addaction name="actionDisconnect_from_current"/>
+    <addaction name="actionServer_list"/>
+   </widget>
+   <widget class="QMenu" name="menuSelf">
+    <property name="title">
+     <string>Self</string>
+    </property>
+    <addaction name="actionChange_password"/>
+    <addaction name="actionChange_nickname"/>
+    <addaction name="actionChange_username"/>
+   </widget>
+   <widget class="QMenu" name="menuPermissions">
+    <property name="title">
+     <string>Permissions</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionChange_proxy"/>
+    <addaction name="actionChange_username_2"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuConnections"/>
+   <addaction name="menuSelf"/>
+   <addaction name="menuPermissions"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionConnect">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="actionDisconnect_from_current">
+   <property name="text">
+    <string>Disconnect from current</string>
+   </property>
+  </action>
+  <action name="actionServer_list">
+   <property name="text">
+    <string>Server list</string>
+   </property>
+  </action>
+  <action name="actionChange_password">
+   <property name="text">
+    <string>Change password</string>
+   </property>
+  </action>
+  <action name="actionChange_nickname">
+   <property name="text">
+    <string>Change nickname</string>
+   </property>
+  </action>
+  <action name="actionChange_username">
+   <property name="text">
+    <string>Change username</string>
+   </property>
+  </action>
+  <action name="actionChange_proxy">
+   <property name="text">
+    <string>Change proxy</string>
+   </property>
+  </action>
+  <action name="actionChange_username_2">
+   <property name="text">
+    <string>Change username</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

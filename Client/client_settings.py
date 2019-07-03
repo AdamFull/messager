@@ -23,54 +23,52 @@ class Response:
 
 class ClientSetting:
     def __init__(self, args=None):
-        self.config_path = 'config/user.conf'
+        self.config_path = dirname(abspath(__file__)) + '/config/'
         self.server_public_key = b''
         self.aes_session_key = b''
-
-        self.config_dir = dirname(abspath(self.config_path))
-        if not exists(self.config_dir):
-            makedirs(self.config_dir)
+        self.private_key = b''
+        self.public_key = b''
+        self.username = ''
+        self.nickname = ''
+        self.password = ''
+        self.server_ip = ''
+        self.port = 9191
+        print("Создай ещё файл с айпишниками, чтобы была возможность выбирать сервер.")
         
-        if isfile(self.config_path) and not args: 
-            self.load()
-        else:
-            self.username = args[0]
-            self.nickname = args[1]
-            self.password = args[2]
-            self.private_key = RSACrypt().export_private()
-            self.server_ip = args[3]
-            self.port = args[4]
-            self.save()
+        if not exists(self.config_path):
+            makedirs(self.config_path)
     
-    def update_rca(self):
+    def generate_rsa(self):
         self.private_key = RSACrypt().export_private()
-        self.save_key()
-        self.private_key = self.load_key()
 
     def load(self):
-        with open(self.config_path, "r") as read_f:
+        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        with open('%s/%s.json' % (self.config_path, config_hash) , "r") as read_f:
             data = load(read_f)
             self.username = data["username"]
             self.nickname = data["nickname"]
             self.password = data["password"]
-            self.private_key = self.load_key()
             self.server_ip = data["ip"]
             self.port = data["port"]
-            self.RSA = RSACrypt(self.private_key)
-            self.public_key = self.RSA.export_public()
     
     def load_key(self):
-        with open('%s/private.pem' % self.config_dir, "rb") as pem_file:
-            return AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        with open('%s/%s.pem' % (self.config_path, config_hash), "rb") as pem_file:
+            self.private_key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+            self.RSA = RSACrypt(self.private_key)
+            self.public_key = self.RSA.export_public()
 
     def save_key(self):
-        with open('%s/private.pem' % self.config_dir, "wb") as pem_file:
-            key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).encrypt(self.private_key)
-            pem_file.write(key)
+        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        if not isfile('%s/%s.pem' % (self.config_path, config_hash)):
+            with open('%s/%s.pem' % (self.config_path, config_hash), "wb") as pem_file:
+                key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).encrypt(self.private_key)
+                pem_file.write(key)
 
     def save(self):
-        with open(self.config_path, "w") as write_f:
+        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        with open('%s/%s.json' % (self.config_path, config_hash), "w") as write_f:
             data = {"username" : self.username ,"nickname" : self.nickname ,"password" : self.password,
             "ip" : self.server_ip, "port" : self.port}
-            self.save_key()
             dump(data, write_f)
+            self.save_key()
