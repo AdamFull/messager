@@ -8,6 +8,18 @@ from sys import stdout
 
 # pyuic5 mainui.ui -o UI.py
 
+class WorkerThread(QtCore.QThread):
+    returned = QtCore.pyqtSignal(object)
+    def __init__(self, client, parent=None):
+        super(WorkerThread, self).__init__(parent)
+        self.client = client    
+
+    def run(self):
+        self.last_msg = ""
+        while True:
+            c_msg = self.client.current_message
+            self.returned.emit(c_msg)
+
 class Connect(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(Connect, self).__init__(parent)
@@ -42,31 +54,42 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.client = Client()
 
+        self.workerthread = WorkerThread(self.client)
+        self.workerthread.returned.connect(self.watchdog)
+        self.workerthread.finished.connect(self.close_watchdog)
+        self.thread_pause = False
+        self.last_message = ""
+
         self.ui.actionConnect.triggered.connect(self.connect)
 
-        self.ui.statusbar.showMessage("Disconnected.")
+        #self.ui.statusbar.showMessage("Disconnected.")
     
     def run_connection(self):
         client_thread = Thread(target=self.client.run)
         client_thread.start()
-        self.watchdog_thread = Thread(target=self.watchdog)
-        self.watchdog_thread.start()
+        self.workerthread.start()
     
+    def close_watchdog(self):
+        self.workerthread.disconnect(self.watchdog)
+        self.workerthread.finished.disconnect(self.close_watchdog)
     
-    def watchdog(self):
-        while True:
-            c_state = self.client.STATE
-            c_msg = self.client.current_message
+    def watchdog(self, c_msg):
+        self.last_message = c_msg
+        self.c_state = self.client.STATE
+        if c_msg != self.last_message:
             if c_state == STATEMENT().CONNECTING:
                 self.ui.statusbar.showMessage(c_msg)
             elif c_state == STATEMENT().CONNECTED:
                 pass
             elif c_state == STATEMENT().DISCONNECTED:
-                break
+                pass
             elif c_state == STATEMENT().VERIFICATION:
-                key, ok = self.inputDialog('Verification', 'Enter verification key: ')
-                if key and ok:
-                    self.client.send_verification_key(str(key))
+                if not self.thread_pause:
+                    self.thread_pause = True
+                    key, ok = self.inputDialog('Verification', 'Enter verification key: ')
+                    if key and ok:
+                        self.thread_pause = False
+                        self.client.send_verification_key(str(key))
     
     def inputDialog(self, windName, textName):
         return QtWidgets.QInputDialog.getText(self, windName, textName)
