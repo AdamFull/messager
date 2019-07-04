@@ -1,0 +1,14 @@
+TRACE:server.py,23:server.Server.__init__:CALL *() **{}
+TRACE:server.py,23:server.Server.__init__:RETURN None
+TRACE:server.py,170:server.Server.run:CALL *() **{}
+TRACE:server.py,155:server.Server.__connect:CALL *([<socket.socket fd=568, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59401)>, ('127.0.0.1', 59401), 'guest'],) **{}
+TRACE:server.py,84:server.Server._signin:CALL *([<socket.socket fd=568, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59401)>, ('127.0.0.1', 59401), 'guest'],) **{}
+TRACE:server.py,70:server.Server.__signup:CALL *(['willson', '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBjXjObFFrTiSLvEVXywauG6F+\nFr2YbToHT1xf68EsxqpdbbeBk3A9UCm0+H7d9wULSGbpSXWMc8jyRIynyPgSgIHX\n+1fmLvcvxjJ/PDeThv3mLyTa7ew5zMgWIehTskQDG22MjQ6USa0KcNdH+ektMLa7\nuIabSmS2zx4bPeabBwIDAQAB\n-----END PUBLIC KEY-----'], [<socket.socket fd=568, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59401)>, ('127.0.0.1', 59401), 'guest']) **{}
+TRACE:server.py,58:server.Server.__verificate:CALL *('willson', [<socket.socket fd=568, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59401)>, ('127.0.0.1', 59401), 'guest']) **{}
+TRACE:server.py,58:server.Server.__verificate:RETURN True
+TRACE:server.py,70:server.Server.__signup:RETURN True
+TRACE:server.py,84:server.Server._signin:CALL *([<socket.socket fd=568, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59401)>, ('127.0.0.1', 59401), 'guest'], ['willson', '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBjXjObFFrTiSLvEVXywauG6F+\nFr2YbToHT1xf68EsxqpdbbeBk3A9UCm0+H7d9wULSGbpSXWMc8jyRIynyPgSgIHX\n+1fmLvcvxjJ/PDeThv3mLyTa7ew5zMgWIehTskQDG22MjQ6USa0KcNdH+ektMLa7\nuIabSmS2zx4bPeabBwIDAQAB\n-----END PUBLIC KEY-----']) **{}
+TRACE:server.py,84:server.Server._signin:RETURN True
+TRACE:server.py,84:server.Server._signin:RETURN True
+TRACE:server.py,33:server.Server.__handler:CALL *(0,) **{}
+TRACE:server.py,155:server.Server.__connect:RETURN None

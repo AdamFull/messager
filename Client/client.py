@@ -144,6 +144,7 @@ class Client:
         self.threads.clear()
     
     def run(self):
+        self.setting.load_key()
         self.connect(self.setting.server_ip, self.setting.port)
     
         
