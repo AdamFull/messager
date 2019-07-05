@@ -48,7 +48,7 @@ class Server:
                     print(e)
                     raise
             for connection in self.connections:
-                if connection[2] == self.connections[client_index][2] and connection != self.connections[client_index]:
+                if connection[2] == self.connections[client_index][2]:
                     self.protocol.send(data, connection[0])  # Отправляем всем клиентам в этой же комнате
     
     def __parse_server_command(self, data):
@@ -132,7 +132,9 @@ class Server:
             if len(args) > 1:
                 command = args[1]
                 if command == 'rooms':
-                    self.protocol.send(','.join(self.setting.server_rooms), self.connections[client_index][0])
+                    self.protocol.send('ROOMS,'+','.join(self.setting.server_rooms), self.connections[client_index][0])
+                    return
+                if command == 'clients':
                     return
             if len(args) > 2:
                 command = args[1]

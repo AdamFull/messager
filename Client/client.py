@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import __future__
 import socket as s
 import threading
 from os import system
@@ -10,31 +11,78 @@ from autologging import logged, traced
 from hashlib import sha256
 from encryption import AESCrypt, RSACrypt
 from client_settings import ClientSetting
+from abc import ABC, abstractmethod
+from typing import List
 
 class STATEMENT:
-    def __init__(self):
-        self.DISCONNECTED = 0
-        self.CONNECTING = 1
-        self.CONNECTED = 2
-        self.VERIFICATION = 3
+        DISCONNECTED = 0
+        CONNECTED = 1
+        VERIFICATION = 2
+
+class INFOTYPE:
+    MESSAGE = "msg"
+    STATUSBAR = "stat"
+    SERVER = "srv"
+    ROOMS = "rms"
+    NONE = ""
+
+class Subject(ABC):
+    @abstractmethod
+    def attach(self, observer) -> None:
+        # Add an observer
+        pass
+    
+    @abstractmethod
+    def detach(self, observer) -> None:
+        # Remove an observer
+        pass
+    
+    @abstractmethod
+    def notify(self) -> None:
+        # Notify observer
+        pass
+
+class Observer(ABC):
+    @abstractmethod
+    def update(self, subject:Subject) -> None:
+        pass
 
 @traced
 @logged
-class Client:
+class Client(Subject):
     sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+    _STATE: int = STATEMENT().DISCONNECTED # Current client state
+    _INFOTYPE: INFOTYPE = INFOTYPE().NONE
+    _CURRENT_MESSAGE: str = ''             # Current client message
+    _PREV_MESSAGE: str = ''
+    _observers: List = []                  # Observres list
     def __init__(self, receive_callback=None):
         self.setting = ClientSetting()
 
-        self.STATE = STATEMENT().DISCONNECTED
-        self.current_message = ''
-
-        self.threads = list()
+        self.thread: threading.Thread = None
 
         #This callback sets by frontend to handle incoming messages
         self.rcv_output = receive_callback
 
         self.isConnected = False
         self.isLogined = False
+    
+    def attach(self, observer:Observer) -> None:
+        self._observers.append(observer)
+    
+    def detach(self, observer:Observer) -> None:
+        self._observers.remove(observer)
+    
+    def notify(self) -> None:
+        for observer in self._observers:
+            observer.update(self)
+    
+    def change_message(self, msg, itype):
+        self._INFOTYPE = itype
+        self._PREV_MESSAGE = self._CURRENT_MESSAGE
+        self._CURRENT_MESSAGE = msg
+        if self._PREV_MESSAGE != self._CURRENT_MESSAGE:
+            self.notify()
 
     def iscrypted(self, data):
         try:
@@ -48,19 +96,24 @@ class Client:
         while getattr(current_thread, "do_run", True):
             try:
                 data = self.protocol.recv(self.sock)
-
             except Exception:
-                system('cls')
-                self.current_message = 'Current connection: none.'
+                self._STATE = STATEMENT().DISCONNECTED
+                self.change_message('Current connection: none.', INFOTYPE().STATUSBAR)
+                self.close()
                 break
+
             if self.iscrypted(data):
                 raw_data = loads(self.crypto.decrypt(data))
                 if self.rcv_output:
                     self.rcv_output(raw_data)
                 else:
-                   self.current_message = "[%s]: %s" % (raw_data["nickname"], raw_data["msg"])
+                   self.change_message("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]), INFOTYPE().MESSAGE)
             else:
-                self.current_message = data.decode('utf-8')
+                tmp = data.decode('utf-8').split(',')
+                if tmp[0] == "ROOMS":
+                    self.change_message(','.join(tmp[1:]), INFOTYPE().ROOMS)
+                else:
+                    self.change_message(data.decode('utf-8'), INFOTYPE().SERVER)
 
     def login(self):
         self.protocol.send("wanna_connect", self.sock) # Sending connection request to server.
@@ -74,10 +127,9 @@ class Client:
                     self.crypto = AESCrypt(self.setting.aes_session_key)
                     return True
                 elif response == "verification":
-                    self.STATE = STATEMENT().VERIFICATION
-                    #self.send_verification_key(input("Verification key: "))
+                    self._STATE = STATEMENT().VERIFICATION
                 elif response == "key_error":
-                    self.current_message = "Keys don't match"
+                    self.change_message("Keys don't match", INFOTYPE().STATUSBAR)
                     return False
                 elif response == "userdata":
                     self.protocol.send(','.join([self.setting.username, self.setting.public_key.decode('utf-8')]), self.sock)
@@ -85,12 +137,11 @@ class Client:
                     self.setting.server_public_key = self.protocol.recv(self.sock).decode('utf-8') # Waiting server public rsa key.
                 else:
                     return False
-            
             else:
-                if self.STATE == STATEMENT().VERIFICATION:
-                    self.current_message = "Waiting varification key."
+                if self._STATE == STATEMENT().VERIFICATION:
+                    self.change_message("Waiting varification key.", INFOTYPE().STATUSBAR)
                 else:
-                    self.current_message = "Waiting server response."
+                    self.change_message("Waiting server response.", INFOTYPE().STATUSBAR)
                 continue
         return False
         
@@ -101,11 +152,10 @@ class Client:
         self.protocol.send(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):
-        if self.STATE == STATEMENT().CONNECTED:
-            self.current_message = "Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port)
+        if self._STATE == STATEMENT().CONNECTED:
+            self.change_message("Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.port), INFOTYPE().STATUSBAR)
             return False
-        self.STATE = STATEMENT().CONNECTING
-        self.current_message = "Trying to connect: %s:%s" % (ip, port)
+        self.change_message("Trying to connect: %s:%s" % (ip, port), INFOTYPE().STATUSBAR)
         try:
             self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
             self.sock.connect((ip, port))
@@ -114,7 +164,7 @@ class Client:
                 attempt = attempts-1
                 return self.connect(ip, port, attempt)
             else:
-                self.current_message = 'Connection failed.'
+                self.change_message('Connection failed.', INFOTYPE().STATUSBAR)
                 return False
         self.setting.server_ip = ip
         self.setting.port = port
@@ -123,31 +173,28 @@ class Client:
 
         if self.login():
             self.isLogined = True
-            system('cls')
-            self.current_message = "Current connection: %s:%s" % (ip, port)
-            self.STATE = STATEMENT().CONNECTED
-            self.threads.append(threading.Thread(target=self.listen))
-            self.threads[0].daemon = True
-            self.threads[0].do_run = True
-            self.threads[0].start()
+            self.change_message("Current connection: %s:%s" % (ip, port), INFOTYPE().STATUSBAR)
+            self._STATE = STATEMENT().CONNECTED
+            self.thread = threading.Thread(target=self.listen)
+            self.thread.daemon = True
+            self.thread.do_run = True
+            self.thread.start()
             return True
         else:
             return False
     
     def disconnect(self):
-        self.current_message = "Disconnecting from server."
-        self.STATE = STATEMENT().DISCONNECTED
+        self.change_message("Disconnecting from server.", INFOTYPE().STATUSBAR)
+        self._STATE = STATEMENT().DISCONNECTED
         self.isLogined = False
-        self.threads[0].do_run = False
+        self.thread.do_run = False
         self.sock.close()
-        self.threads[0].join()
-        self.threads.clear()
+        self.threadjoin()
     
     def run(self):
         self.setting.load_key()
         self.connect(self.setting.server_ip, self.setting.port)
     
-        
     def server_command(self, command):
         self.protocol.send(command, self.sock)
     
@@ -155,10 +202,6 @@ class Client:
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
         raw_data = self.crypto.encrypt(dumps(msg_data, ensure_ascii=False).encode('utf-8'))
         self.protocol.send(raw_data, self.sock)
-        
-
-    def start(self):
-        pass
     
     def set_password(self, new_password):
         self.setting.password = new_password

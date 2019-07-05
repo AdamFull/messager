@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>Messager</class>
  <widget class="QMainWindow" name="Messager">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>600</width>
@@ -9,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Postogramm</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2">
@@ -37,7 +45,7 @@
        <number>1</number>
       </property>
       <item>
-       <widget class="QTextBrowser" name="chat_box"/>
+       <widget class="QListWidget" name="chat_list"/>
       </item>
       <item>
        <layout class="QHBoxLayout" name="messag_area">
@@ -47,7 +55,7 @@
         <item>
          <widget class="QPushButton" name="send_message">
           <property name="text">
-           <string>PushButton</string>
+           <string>Send</string>
           </property>
          </widget>
         </item>
@@ -144,6 +152,11 @@
   <action name="actionChange_username_2">
    <property name="text">
     <string>Change username</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="text">
+    <string>Disconnect</string>
    </property>
   </action>
  </widget>

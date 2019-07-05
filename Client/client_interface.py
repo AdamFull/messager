@@ -2,24 +2,59 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
 from threading import Thread
-from client import Client, STATEMENT
+from client import Client, STATEMENT, Observer, Subject
 from client_settings import ClientSetting
 import time
 
-# pyuic5 mainui.ui -o UI.py
+# pyuic5 main_window.ui -o main_window.py
 
-class WorkerThread(QtCore.QThread):
-    returned = QtCore.pyqtSignal(object)
-    def __init__(self, client, parent=None):
-        super(WorkerThread, self).__init__(parent)
-        self.client = client    
+class ObserverWorker(QtCore.QObject):
+    message = QtCore.pyqtSignal(object)
+    status = QtCore.pyqtSignal(object)
+    verivication = QtCore.pyqtSignal()
+    server = QtCore.pyqtSignal(object)
+    rooms = QtCore.pyqtSignal(object)
 
-    def run(self):
-        self.last_msg = ""
-        while True:
-            c_msg = self.client.current_message
-            self.returned.emit(c_msg)
-            time.sleep(0.1)
+    def recvMessage(self, msg):
+        self.message.emit(msg)
+    
+    def recvStatus(self, msg):
+        self.status.emit(msg)
+    
+    def recvVerif(self):
+        self.verivication.emit()
+    
+    def recvServer(self, msg):
+        self.server.emit(msg)
+
+    def recvRooms(self, msg):
+        self.rooms.emit(msg)
+
+
+class ConcreteObserver(Observer):
+    def __init__(self):
+        self.observer_worker = ObserverWorker()
+        self.need_update = True
+    
+    def update(self, subject:Subject) -> None:
+        c_state = subject._STATE
+        c_msg = subject._CURRENT_MESSAGE
+        c_infotype = subject._INFOTYPE
+        if c_infotype == "stat":
+            self.observer_worker.recvStatus(c_msg)
+        elif c_infotype == "msg":
+            self.observer_worker.recvMessage(c_msg)
+        elif c_infotype == "srv":
+            self.observer_worker.recvServer(c_msg)
+        elif c_infotype == "rms":
+            self.observer_worker.recvRooms(c_msg)
+
+        if c_state == 2:
+            self.observer_worker.recvVerif()
+        if c_state == 1 and self.need_update:
+            self.need_update = False
+            subject.server_command("server rooms")
+
 
 class Connect(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -53,43 +88,55 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        self.client = Client()
+        # Backend client
+        self.client: Client = Client()
+        self.observer: ConcreteObserver = ConcreteObserver()
+        self.observer.observer_worker.status.connect(self.ui.statusbar.showMessage)
+        self.observer.observer_worker.message.connect(self.recvMessage)
+        self.observer.observer_worker.verivication.connect(self.verification_input)
+        self.observer.observer_worker.server.connect(self.serverInfo)
+        self.observer.observer_worker.rooms.connect(self.loadRooms)
+        self.client.attach(self.observer)
 
-        self.workerthread = WorkerThread(self.client)
-        self.workerthread.returned.connect(self.watchdog, QtCore.Qt.QueuedConnection)
-        self.workerthread.finished.connect(self.close_watchdog, QtCore.Qt.QueuedConnection)
-        self.thread_pause = False
-        self.last_message = ""
+        self.thread__ = Thread(target=self.client.run)
 
+        # Menu actions
         self.ui.actionConnect.triggered.connect(self.connect)
 
-        #self.ui.statusbar.showMessage("Disconnected.")
+        # UI actions
+        self.ui.send_message.clicked.connect(self.sendMessage)
+        # self.ui.message_box.textEdited.connect() #If text edited...
+        self.ui.message_box.returnPressed.connect(self.sendMessage)
+
+        # UI defaults
+        self.ui.statusbar.showMessage("Disconnected.")
+    
+    def sendMessage(self):
+        self.client.send(self.ui.message_box.text())
+        self.ui.message_box.setText("")
+
+    def recvMessage(self, msg):
+        item = QtWidgets.QListWidgetItem(msg)
+        self.ui.chat_list.addItem(item)
+
+    def verification_input(self):
+        key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
+        if key and ok:
+            self.client.send_verification_key(str(key))
+
+    def serverInfo(self, msg:str):
+        pass
+    
+    def loadRooms(self, msg:str):
+        rooms = msg.split(',')
+        self.ui.room_list.clear()
+        for room in rooms:
+            item = QtWidgets.QListWidgetItem(room)
+            self.ui.room_list.addItem(item)
+            
     
     def run_connection(self):
-        client_thread = Thread(target=self.client.run)
-        client_thread.start()
-        self.workerthread.start()
-    
-    def close_watchdog(self):
-        self.workerthread.disconnect(self.watchdog)
-        self.workerthread.finished.disconnect(self.close_watchdog)
-    
-    def watchdog(self, c_msg):
-        if self.last_message == c_msg:
-            self.c_state = self.client.STATE
-            if self.c_state == STATEMENT().CONNECTING:
-                self.ui.statusbar.showMessage(c_msg)
-            elif self.c_state == STATEMENT().CONNECTED:
-                self.ui.statusbar.showMessage(c_msg)
-            elif self.c_state == STATEMENT().DISCONNECTED:
-                pass
-            elif self.c_state == STATEMENT().VERIFICATION:
-                if not self.thread_pause:
-                    self.thread_pause = True
-                    key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
-                    if key and ok:
-                        self.client.send_verification_key(str(key))
-        self.last_message = c_msg
+        self.thread__.start()
 
     def connect(self):
         dialog = Connect()
@@ -103,6 +150,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.client.setting.save()
         self.client.setting.load()
         self.run_connection()
+    
+    def close(self) -> None:
+        self.client.detach(self.observer)
+        self.client.close()
 
 
 if __name__ == "__main__":

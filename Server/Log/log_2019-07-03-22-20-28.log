@@ -1,7 +1,0 @@
-TRACE:server.py,23:server.Server.__init__:CALL *() **{}
-TRACE:server.py,23:server.Server.__init__:RETURN None
-TRACE:server.py,170:server.Server.run:CALL *() **{}
-TRACE:server.py,155:server.Server.__connect:CALL *([<socket.socket fd=424, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59371)>, ('127.0.0.1', 59371), 'guest'],) **{}
-TRACE:server.py,84:server.Server._signin:CALL *([<socket.socket fd=424, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 9191), raddr=('127.0.0.1', 59371)>, ('127.0.0.1', 59371), 'guest'],) **{}
-TRACE:server.py,84:server.Server._signin:RETURN False
-TRACE:server.py,155:server.Server.__connect:RETURN None

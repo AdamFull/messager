@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Messager(object):
     def setupUi(self, Messager):
         Messager.setObjectName("Messager")
+        Messager.resize(600, 400)
         Messager.setMinimumSize(QtCore.QSize(600, 400))
         self.centralwidget = QtWidgets.QWidget(Messager)
         self.centralwidget.setObjectName("centralwidget")
@@ -24,9 +25,9 @@ class Ui_Messager(object):
         self.chat_layout = QtWidgets.QVBoxLayout()
         self.chat_layout.setSpacing(1)
         self.chat_layout.setObjectName("chat_layout")
-        self.chat_box = QtWidgets.QTextBrowser(self.centralwidget)
-        self.chat_box.setObjectName("chat_box")
-        self.chat_layout.addWidget(self.chat_box)
+        self.chat_list = QtWidgets.QListWidget(self.centralwidget)
+        self.chat_list.setObjectName("chat_list")
+        self.chat_layout.addWidget(self.chat_list)
         self.messag_area = QtWidgets.QHBoxLayout()
         self.messag_area.setObjectName("messag_area")
         self.message_box = QtWidgets.QLineEdit(self.centralwidget)
@@ -73,6 +74,8 @@ class Ui_Messager(object):
         self.actionChange_proxy.setObjectName("actionChange_proxy")
         self.actionChange_username_2 = QtWidgets.QAction(Messager)
         self.actionChange_username_2.setObjectName("actionChange_username_2")
+        self.actionDisconnect = QtWidgets.QAction(Messager)
+        self.actionDisconnect.setObjectName("actionDisconnect")
         self.menuConnections.addAction(self.actionConnect)
         self.menuConnections.addAction(self.actionDisconnect_from_current)
         self.menuConnections.addAction(self.actionServer_list)
@@ -92,8 +95,8 @@ class Ui_Messager(object):
 
     def retranslateUi(self, Messager):
         _translate = QtCore.QCoreApplication.translate
-        Messager.setWindowTitle(_translate("Messager", "MainWindow"))
-        self.send_message.setText(_translate("Messager", "PushButton"))
+        Messager.setWindowTitle(_translate("Messager", "Postogramm"))
+        self.send_message.setText(_translate("Messager", "Send"))
         self.menuConnections.setTitle(_translate("Messager", "Connections"))
         self.menuSelf.setTitle(_translate("Messager", "Self"))
         self.menuPermissions.setTitle(_translate("Messager", "Permissions"))
@@ -107,4 +110,5 @@ class Ui_Messager(object):
         self.actionChange_username.setText(_translate("Messager", "Change username"))
         self.actionChange_proxy.setText(_translate("Messager", "Change proxy"))
         self.actionChange_username_2.setText(_translate("Messager", "Change username"))
+        self.actionDisconnect.setText(_translate("Messager", "Disconnect"))
 
