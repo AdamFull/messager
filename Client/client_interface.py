@@ -12,7 +12,7 @@ class ObserverWorker(QtCore.QObject):
     message = QtCore.pyqtSignal(object)
     status = QtCore.pyqtSignal(object)
     verivication = QtCore.pyqtSignal()
-    server = QtCore.pyqtSignal(object)
+    server = QtCore.pyqtSignal(object, object)
     rooms = QtCore.pyqtSignal(object)
 
     def recvMessage(self, msg):
@@ -25,7 +25,7 @@ class ObserverWorker(QtCore.QObject):
         self.verivication.emit()
     
     def recvServer(self, msg):
-        self.server.emit(msg)
+        self.server.emit(msg, QtCore.Qt.AlignCenter)
 
     def recvRooms(self, msg):
         self.rooms.emit(msg)
@@ -69,9 +69,14 @@ class Connect(QtWidgets.QDialog):
         self.ui.password.setText('g159753H')
         self.ui.confirm.setText('g159753H')
 
-        self.ui.connect_brn.clicked.connect(self.connect)
+        self.ui.connect_btn.clicked.connect(self.connect)
         self.ui.cancel_btn.clicked.connect(self.close)
+        self.ui.new_tab_btn.clicked.connect(self.new_window)
     
+    def new_window(self):
+        print("SOON")
+        pass
+
     def connect(self):
         if self.ui.password.text() == self.ui.confirm.text():
             self.server_ip = self.ui.server_ip.text()
@@ -94,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.observer.observer_worker.status.connect(self.ui.statusbar.showMessage)
         self.observer.observer_worker.message.connect(self.recvMessage)
         self.observer.observer_worker.verivication.connect(self.verification_input)
-        self.observer.observer_worker.server.connect(self.serverInfo)
+        self.observer.observer_worker.server.connect(self.recvMessage)
         self.observer.observer_worker.rooms.connect(self.loadRooms)
         self.client.attach(self.observer)
 
@@ -102,30 +107,43 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Menu actions
         self.ui.actionConnect.triggered.connect(self.connect)
+        self.ui.actionDisconnect_from_current.triggered.connect(self.disconnect_)
+        self.ui.actionServer_list.triggered.connect(print)
+
+        # Other actions...
 
         # UI actions
         self.ui.send_message.clicked.connect(self.sendMessage)
+        self.ui.room_list.itemDoubleClicked.connect(self.changeRoom)
         # self.ui.message_box.textEdited.connect() #If text edited...
         self.ui.message_box.returnPressed.connect(self.sendMessage)
 
         # UI defaults
         self.ui.statusbar.showMessage("Disconnected.")
+        self.ui.chat_list.setWordWrap(True)
+        self.ui.room_list.setWordWrap(True)
     
     def sendMessage(self):
-        self.client.send(self.ui.message_box.text())
-        self.ui.message_box.setText("")
+        msg = self.ui.message_box.text()
+        if msg and self.client.isLogined:
+            self.client.send(msg)
+            self.recvMessage(msg, QtCore.Qt.AlignRight)
+            self.ui.message_box.setText("")
+    
+    def changeRoom(self, item):
+        self.ui.chat_list.clear()
+        self.client.server_command("server chroom %s" % item.text())
 
-    def recvMessage(self, msg):
+    def recvMessage(self, msg, align=QtCore.Qt.AlignLeft):
         item = QtWidgets.QListWidgetItem(msg)
+        item.setTextAlignment(align)
         self.ui.chat_list.addItem(item)
+        self.ui.chat_list.scrollToItem(item)
 
     def verification_input(self):
         key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
         if key and ok:
             self.client.send_verification_key(str(key))
-
-    def serverInfo(self, msg:str):
-        pass
     
     def loadRooms(self, msg:str):
         rooms = msg.split(',')
@@ -134,8 +152,13 @@ class MainWindow(QtWidgets.QMainWindow):
             item = QtWidgets.QListWidgetItem(room)
             self.ui.room_list.addItem(item)
             
-    
+    def disconnect_(self) -> None:
+        if self.client.isLogined:
+            self.client.disconnect()
+            self.thread__.join()
+
     def run_connection(self):
+        self.thread__ = Thread(target=self.client.run)
         self.thread__.start()
 
     def connect(self):
@@ -148,6 +171,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.client.setting.password = dialog.password
             self.client.setting.generate_rsa()
             self.client.setting.save()
+        else:
+            return
         self.client.setting.load()
         self.run_connection()
     

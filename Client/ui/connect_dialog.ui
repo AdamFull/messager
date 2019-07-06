@@ -149,7 +149,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="connect_brn">
+      <widget class="QPushButton" name="connect_btn">
        <property name="text">
         <string>Connect</string>
        </property>

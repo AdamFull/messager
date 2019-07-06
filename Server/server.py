@@ -5,7 +5,8 @@ import socket
 from threading import Thread
 from protocol import Protocol
 from autologging import logged, traced
-from server_database import ServerDatabase, ServerSettings
+from server_database import ServerDatabase, ServerSettings, RSACrypt
+from json import loads, dumps
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -22,6 +23,7 @@ class Connection(socket.socket):
         self.ip: str = args[0]
         self.port: int = args[1]
         self.nickname = ''
+        self.rsa_public = ''
         self.room = ''
         self.thread: Thread = None
 
@@ -57,7 +59,8 @@ class Server(socket.socket):
                     print(e)
                     raise
             for connection in self.connections:
-                if connection.room == client_connection.room:
+                if connection.room == client_connection.room and connection != client_connection:
+                    # RSACrypt(connection.rsa_public).encrypt(data, connection.rsa_public)
                     self.protocol.send(data, connection.socket)  # Отправляем всем клиентам в этой же комнате
     
     def __parse_server_command(self, data):
@@ -104,6 +107,7 @@ class Server(socket.socket):
             username, public_key = data[0], data[1]
         
         connection.nickname = username
+        connection.rsa_public = public_key
 
         if self.server_database.is_user_already_exist(username):
             if self.server_database.is_user_verificated(username):
@@ -161,7 +165,7 @@ class Server(socket.socket):
             last.room = room_id
             self.connections.append(last)
             for connection in self.connections:
-                if connection.room == room_id:
+                if connection.room == room_id and connection != client_data:
                     self.protocol.send("%s connected to room %s." % (last.nickname, room_id), connection.socket)
         else:
             self.protocol.send('Room %s not found.' % room_id, last.socket)

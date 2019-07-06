@@ -13,6 +13,9 @@ from encryption import AESCrypt, RSACrypt
 from client_settings import ClientSetting
 from abc import ABC, abstractmethod
 from typing import List
+from random import choice
+from string import ascii_letters, punctuation, digits
+from winsound import PlaySound, SND_ASYNC
 
 class STATEMENT:
         DISCONNECTED = 0
@@ -101,11 +104,13 @@ class Client(Subject):
                 break
 
             if self.iscrypted(data):
+                #data = self.setting.RSA.decrypt(data)
                 raw_data = loads(self.crypto.decrypt(data))
                 if self.rcv_output:
                     self.rcv_output(raw_data)
                 else:
-                   self.change_message("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]), INFOTYPE().MESSAGE)
+                    PlaySound("audio/msg.wav", SND_ASYNC)
+                    self.change_message("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]), INFOTYPE().MESSAGE)
             else:
                 tmp = data.decode('utf-8').split(',')
                 if tmp[0] == "ROOMS":
@@ -181,23 +186,23 @@ class Client(Subject):
         else:
             return False
     
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.change_message("Disconnecting from server.", INFOTYPE().STATUSBAR)
         self._STATE = STATEMENT().DISCONNECTED
         self.isLogined = False
         self.thread.do_run = False
         self.sock.close()
-        self.threadjoin()
+        self.thread.join()
     
-    def run(self):
+    def run(self) -> None:
         self.setting.load_key()
         self.connect(self.setting.server_ip, self.setting.port)
     
-    def server_command(self, command):
+    def server_command(self, command) -> None:
         self.protocol.send(command, self.sock)
     
     def send(self, input_msg): #Message sending method
-        msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
+        msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "salt": ''.join(choice(ascii_letters+digits+punctuation) for i in range(16))}
         raw_data = self.crypto.encrypt(dumps(msg_data, ensure_ascii=False).encode('utf-8'))
         self.protocol.send(raw_data, self.sock)
     
