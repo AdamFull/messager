@@ -16,13 +16,13 @@ class Room(object):
         return super().__init__(*args, **kwargs)
 
 class Connection(socket.socket):
-    def __init__(self, connection:socket.socket, args, room):
+    def __init__(self, connection:socket.socket, args):
         super(Connection, self).__init__()
         self.socket: s.socket = connection
         self.ip: str = args[0]
         self.port: int = args[1]
         self.nickname = ''
-        self.room = room
+        self.room = ''
         self.thread: Thread = None
 
 @traced
@@ -58,7 +58,7 @@ class Server(socket.socket):
                     raise
             for connection in self.connections:
                 if connection.room == client_connection.room:
-                    self.protocol.send(data, client_connection.socket)  # Отправляем всем клиентам в этой же комнате
+                    self.protocol.send(data, connection.socket)  # Отправляем всем клиентам в этой же комнате
     
     def __parse_server_command(self, data):
         if not data == None:
@@ -173,6 +173,7 @@ class Server(socket.socket):
             client_data.thread.daemon = True
             client_data.thread.start()
             self.connections.append(client_data)
+            self.__change_room("guest", client_data)
             print(str(client_data.ip) + ':' + str(client_data.port), "connected", len(self.connections))
         else:
             print('Connection denied.')
@@ -184,7 +185,7 @@ class Server(socket.socket):
         self.state = STATE_WORKING
         while self.state == STATE_WORKING:
             c, a = self.accept()
-            client_data = Connection(c, a, self.setting.server_rooms[0])
+            client_data = Connection(c, a)
             autorisation_thread = Thread(target=self.__connect, args=[client_data])
             autorisation_thread.start()
 
