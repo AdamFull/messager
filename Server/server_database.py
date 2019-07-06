@@ -1,7 +1,7 @@
 import sqlite3
 from os import path, makedirs
 from configparser import ConfigParser
-from os.path import isfile
+from os.path import isfile, exists
 from hashlib import sha256
 from random import choice
 from string import ascii_letters, punctuation, digits
@@ -101,10 +101,13 @@ class SqlInterface:
 class ServerDatabase(SqlInterface):
     def __init__(self):
         self.data_path = 'Data/'
+        self.log_path = 'Log/'
         self.database_path = self.data_path + "server_database.db"
 
-        if not path.exists(self.data_path):
+        if not exists(self.data_path):
             makedirs(self.data_path)
+        if not exists(self.log_path):
+            makedirs(self.log_path)
 
         self.create_database(self.database_path)
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")

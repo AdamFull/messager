@@ -24,6 +24,7 @@ class Response:
 class ClientSetting:
     def __init__(self, args=None):
         self.config_path = dirname(abspath(__file__)) + '/config/'
+        self.log_path = dirname(abspath(__file__)) + '/Log/'
         self.server_public_key = b''
         self.aes_session_key = b''
         self.private_key = b''
@@ -37,6 +38,8 @@ class ClientSetting:
         
         if not exists(self.config_path):
             makedirs(self.config_path)
+        if not exists(self.log_path):
+            makedirs(self.log_path)
     
     def generate_rsa(self):
         self.private_key = RSACrypt().export_private()
