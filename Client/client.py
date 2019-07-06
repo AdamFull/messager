@@ -54,7 +54,6 @@ class Client(Subject):
     _STATE: int = STATEMENT().DISCONNECTED # Current client state
     _INFOTYPE: INFOTYPE = INFOTYPE().NONE
     _CURRENT_MESSAGE: str = ''             # Current client message
-    _PREV_MESSAGE: str = ''
     _observers: List = []                  # Observres list
     def __init__(self, receive_callback=None):
         self.setting = ClientSetting()
@@ -79,10 +78,9 @@ class Client(Subject):
     
     def change_message(self, msg, itype):
         self._INFOTYPE = itype
-        self._PREV_MESSAGE = self._CURRENT_MESSAGE
         self._CURRENT_MESSAGE = msg
-        if self._PREV_MESSAGE != self._CURRENT_MESSAGE:
-            self.notify()
+        print(self._CURRENT_MESSAGE, self._INFOTYPE, self._STATE)
+        self.notify()
 
     def iscrypted(self, data):
         try:
@@ -173,8 +171,8 @@ class Client(Subject):
 
         if self.login():
             self.isLogined = True
-            self.change_message("Current connection: %s:%s" % (ip, port), INFOTYPE().STATUSBAR)
             self._STATE = STATEMENT().CONNECTED
+            self.change_message("Current connection: %s:%s" % (ip, port), INFOTYPE().STATUSBAR)
             self.thread = threading.Thread(target=self.listen)
             self.thread.daemon = True
             self.thread.do_run = True
