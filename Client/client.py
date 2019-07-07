@@ -25,8 +25,9 @@ class STATEMENT:
 class INFOTYPE:
     MESSAGE = "msg"
     STATUSBAR = "stat"
-    SERVER = "srv"
+    INFO = "srv"
     ROOMS = "rms"
+    USERS = "usrs"
     NONE = ""
 
 class Subject(ABC):
@@ -113,10 +114,12 @@ class Client(Subject):
                     self.change_message("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]), INFOTYPE().MESSAGE)
             else:
                 tmp = data.decode('utf-8').split(',')
-                if tmp[0] == "ROOMS":
+                if tmp[0] == "ROOMS:":
                     self.change_message(','.join(tmp[1:]), INFOTYPE().ROOMS)
+                elif tmp[0] == "INROOM:":
+                    self.change_message(','.join(tmp[1:]), INFOTYPE().USERS)
                 else:
-                    self.change_message(data.decode('utf-8'), INFOTYPE().SERVER)
+                    self.change_message(data.decode('utf-8'), INFOTYPE().INFO)
 
     def login(self):
         self.protocol.send("wanna_connect", self.sock) # Sending connection request to server.
@@ -135,7 +138,7 @@ class Client(Subject):
                     self.change_message("Keys don't match", INFOTYPE().STATUSBAR)
                     return False
                 elif response == "userdata":
-                    self.protocol.send(','.join([self.setting.username, self.setting.public_key.decode('utf-8')]), self.sock)
+                    self.protocol.send(','.join([self.setting.nickname, self.setting.public_key.decode('utf-8')]), self.sock)
                 elif response == "server_puplic_key":
                     self.setting.server_public_key = self.protocol.recv(self.sock).decode('utf-8') # Waiting server public rsa key.
                 else:
@@ -202,7 +205,7 @@ class Client(Subject):
         self.protocol.send(command, self.sock)
     
     def send(self, input_msg): #Message sending method
-        msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "salt": ''.join(choice(ascii_letters+digits+punctuation) for i in range(16))}
+        msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "salt": ''.join(choice(ascii_letters+digits+punctuation) for i in range(32))}
         raw_data = self.crypto.encrypt(dumps(msg_data, ensure_ascii=False).encode('utf-8'))
         self.protocol.send(raw_data, self.sock)
     

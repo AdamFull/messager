@@ -7,6 +7,7 @@ from client_settings import ClientSetting
 import time
 
 # pyuic5 main_window.ui -o main_window.py
+# pyuic5 connect_dialog.ui -o connect_dialog.py
 
 class ObserverWorker(QtCore.QObject):
     message = QtCore.pyqtSignal(object)
@@ -14,6 +15,7 @@ class ObserverWorker(QtCore.QObject):
     verivication = QtCore.pyqtSignal()
     server = QtCore.pyqtSignal(object, object)
     rooms = QtCore.pyqtSignal(object)
+    users = QtCore.pyqtSignal(object)
 
     def recvMessage(self, msg):
         self.message.emit(msg)
@@ -29,6 +31,9 @@ class ObserverWorker(QtCore.QObject):
 
     def recvRooms(self, msg):
         self.rooms.emit(msg)
+    
+    def recvUsers(self, msg):
+        self.users.emit(msg)
 
 
 class ConcreteObserver(Observer):
@@ -48,6 +53,8 @@ class ConcreteObserver(Observer):
             self.observer_worker.recvServer(c_msg)
         elif c_infotype == "rms":
             self.observer_worker.recvRooms(c_msg)
+        elif c_infotype == "usrs":
+            self.observer_worker.recvUsers(c_msg)
 
         if c_state == 2:
             self.observer_worker.recvVerif()
@@ -64,7 +71,6 @@ class Connect(QtWidgets.QDialog):
 
         self.ui.server_ip.setText('localhost')
         self.ui.server_port.setValue(9191)
-        self.ui.username.setText('willson')
         self.ui.nickname.setText('nagibator228')
         self.ui.password.setText('g159753H')
         self.ui.confirm.setText('g159753H')
@@ -81,7 +87,6 @@ class Connect(QtWidgets.QDialog):
         if self.ui.password.text() == self.ui.confirm.text():
             self.server_ip = self.ui.server_ip.text()
             self.port = self.ui.server_port.value()
-            self.username = self.ui.username.text()
             self.nickname = self.ui.nickname.text()
             self.password = self.ui.password.text()
             self.accept()
@@ -101,6 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.observer.observer_worker.verivication.connect(self.verification_input)
         self.observer.observer_worker.server.connect(self.recvMessage)
         self.observer.observer_worker.rooms.connect(self.loadRooms)
+        self.observer.observer_worker.users.connect(self.loadUsers)
         self.client.attach(self.observer)
 
         self.thread__ = Thread(target=self.client.run)
@@ -139,6 +145,9 @@ class MainWindow(QtWidgets.QMainWindow):
         item.setTextAlignment(align)
         self.ui.chat_list.addItem(item)
         self.ui.chat_list.scrollToItem(item)
+    
+    def loadUsers(self, msg):
+        print(msg)
 
     def verification_input(self):
         key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
@@ -166,7 +175,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if dialog.exec_()==QtWidgets.QDialog.Accepted:
             self.client.setting.server_ip = dialog.server_ip
             self.client.setting.port = dialog.port
-            self.client.setting.username = dialog.username
             self.client.setting.nickname = dialog.nickname
             self.client.setting.password = dialog.password
             self.client.setting.generate_rsa()

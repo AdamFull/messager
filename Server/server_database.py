@@ -161,6 +161,8 @@ class ServerSettings:
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
         self.private_key = b''
         self.public_key = b''
+        self.aes_key_ = self.aes_key()
+        self.AES = AESCrypt(self.aes_key_)
 
         if isfile(self.config_path):
             if not isfile("private.pem"):

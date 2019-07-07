@@ -29,7 +29,6 @@ class ClientSetting:
         self.aes_session_key = b''
         self.private_key = b''
         self.public_key = b''
-        self.username = ''
         self.nickname = ''
         self.password = ''
         self.server_ip = ''
@@ -48,7 +47,6 @@ class ClientSetting:
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
         with open('%s/%s.json' % (self.config_path, config_hash) , "r") as read_f:
             data = load(read_f)
-            self.username = data["username"]
             self.nickname = data["nickname"]
             self.password = data["password"]
             self.server_ip = data["ip"]
@@ -71,7 +69,7 @@ class ClientSetting:
     def save(self):
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
         with open('%s/%s.json' % (self.config_path, config_hash), "w") as write_f:
-            data = {"username" : self.username ,"nickname" : self.nickname ,"password" : self.password,
+            data = {"nickname" : self.nickname ,"password" : self.password,
             "ip" : self.server_ip, "port" : self.port}
             dump(data, write_f)
             self.save_key()
