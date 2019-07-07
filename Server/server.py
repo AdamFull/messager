@@ -7,14 +7,11 @@ from protocol import Protocol
 from autologging import logged, traced
 from server_database import ServerDatabase, ServerSettings, RSACrypt
 from json import loads, dumps
+from typing import List
 
 STATE_READY = 0
 STATE_WORKING = 1
 STATE_STOPPING = 3
-
-class Room(object):
-    def __init__(self, *args, **kwargs):
-        return super().__init__(*args, **kwargs)
 
 class Connection(socket.socket):
     def __init__(self, connection:socket.socket, args):
@@ -24,8 +21,31 @@ class Connection(socket.socket):
         self.port: int = args[1]
         self.nickname = ''
         self.rsa_public = ''
-        self.room = ''
         self.thread: Thread = None
+
+class Room(object):
+    users = list()
+    #List[Connection]
+    def __init__(self, name):
+        super(Room, self).__init__()
+        self.name = name
+        self.protocol = Protocol()
+    
+    def connect(self, connection:Connection) -> None:
+        if not connection in self.users:
+            self.users.append(connection)
+            self.protocol.send("%s connected to chat." % connection.nickname, connection.socket)
+    
+    def disconnect(self, connection:Connection) -> None:
+        if connection in self.users:
+            self.users.pop(self.users.index(connection))
+            self.protocol.send("%s left the chat." % connection.nickname, connection.socket)
+    
+    def send(self, data, client:Connection):
+        for connection in self.users:
+            if connection != client and client in self.users:
+                self.protocol.send(data, connection.socket)
+            
 
 @traced
 @logged
@@ -42,6 +62,7 @@ class Server(socket.socket):
         self.listen(self.setting.maximum_users)  # Listen socket N connections
         self.state = STATE_READY
         self.protocol = Protocol()
+        self.rooms = [Room(name) for name in self.setting.server_rooms]
         self.aes_key = self.setting.aes_key()
 
     def __handler(self, client_connection:Connection):
@@ -51,21 +72,18 @@ class Server(socket.socket):
                 self.__parse_client_command(data, client_connection)
             except socket.error as e:
                 if e.errno == socket.errno.ECONNRESET:
-                    print(str(client_connection.ip) + ':' + str(client_connection.port), "disconnected", len(self.connections))
+                    print(str(client_connection.nickname), "disconnected", len(self.connections))
+                    for room in self.rooms:
+                        room.disconnect(client_connection)
                     client_connection.socket.close()
                     self.connections.pop(self.connections.index(client_connection))
                     break
                 else:
                     print(e)
                     raise
-            for connection in self.connections:
-                if connection.room == client_connection.room and connection != client_connection:
-                    # RSACrypt(connection.rsa_public).encrypt(data, connection.rsa_public)
-                    self.protocol.send(data, connection.socket)  # Отправляем всем клиентам в этой же комнате
-    
-    def __parse_server_command(self, data):
-        if not data == None:
-            args = data.split(' ')
+
+            for room in self.rooms:
+                room.send(data, client_connection)
     
     def __verificate(self, username, connection:Connection):
         try:
@@ -160,15 +178,15 @@ class Server(socket.socket):
 
     def __change_room(self, room_id, client_data:Connection):
         '''This method allows the user to switch between rooms.'''
-        last: Connection = self.connections.pop(self.connections.index(client_data))
-        if room_id in self.setting.server_rooms:
-            last.room = room_id
-            self.connections.append(last)
-            for connection in self.connections:
-                if connection.room == room_id and connection != client_data:
-                    self.protocol.send("%s connected to room %s." % (last.nickname, room_id), connection.socket)
-        else:
-            self.protocol.send('Room %s not found.' % room_id, last.socket)
+        for room in self.rooms:
+            room.disconnect(client_data)
+            if room.name == room_id:
+                new = self.rooms.pop(self.rooms.index(room))
+                new.connect(client_data)
+                self.rooms.append(new)
+                print([room.users for room in self.rooms])
+                return
+        self.protocol.send('Room %s not found.' % room_id, client_data.socket)
 
     def __connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
@@ -178,7 +196,7 @@ class Server(socket.socket):
             client_data.thread.start()
             self.connections.append(client_data)
             self.__change_room("guest", client_data)
-            print(str(client_data.ip) + ':' + str(client_data.port), "connected", len(self.connections))
+            print(str(client_data.nickname), "connected", len(self.connections))
         else:
             print('Connection denied.')
             client_data.socket.close()
