@@ -1,0 +1,3 @@
+autologging
+pyqt5
+pycryptodome

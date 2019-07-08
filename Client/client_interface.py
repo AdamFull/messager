@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
+from ui.server_list import Ui_serverList
 from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
 from client_settings import ClientSetting
@@ -90,6 +91,16 @@ class Connect(QtWidgets.QDialog):
             self.nickname = self.ui.nickname.text()
             self.password = self.ui.password.text()
             self.accept()
+
+class ServerList(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(ServerList, self).__init__(parent)
+        self.ui = Ui_serverList()
+        self.ui.setupUi(self)
+        self.load()
+    
+    def load(self):
+        pass
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent = None):
