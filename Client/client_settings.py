@@ -3,6 +3,7 @@ from os.path import dirname, exists, abspath, isfile
 from json import load, dump
 from encryption import RSACrypt, AESCrypt
 from hashlib import sha256
+from csv import reader, writer
 
 #This class contains all client settings
 #- loads settings from file
@@ -42,6 +43,23 @@ class ClientSetting:
     
     def generate_rsa(self):
         self.private_key = RSACrypt().export_private()
+    
+    def add_new_configuration(self):
+        with open('%s/server_list.csv' % self.config_path, "a+") as file:
+            readed = file.read().split(',')
+            print(readed)
+            new_line = '%s%s:%s' % (',' if len(readed) > 0 else '' ,self.server_ip, self.port)
+            if not new_line in readed:
+                file.write(new_line)
+    
+    def load_configurations(self):
+        with open('%s/server_list.csv' % self.config_path, "r") as file:
+            return file.read()
+    
+    def load_last_configuration(self):
+        with open('%s/server_list.csv' % self.config_path, "r") as file:
+            lines = file.read()
+            return lines[len(lines)-1]
 
     def load(self):
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
@@ -67,6 +85,7 @@ class ClientSetting:
                 pem_file.write(key)
 
     def save(self):
+        self.add_new_configuration()
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
         with open('%s/%s.json' % (self.config_path, config_hash), "w") as write_f:
             data = {"nickname" : self.nickname ,"password" : self.password,
