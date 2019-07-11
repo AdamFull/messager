@@ -1,0 +1,12 @@
+TRACE:server.py,127:server.Server.__init__:CALL *() **{}
+TRACE:server.py,127:server.Server.__init__:RETURN None
+TRACE:server.py,190:server.Server.run:CALL *() **{}
+TRACE:server.py,176:server.Server.connect:CALL *(<server.Connection fd=640, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,136:server.Server.handler:CALL *(<server.Connection fd=640, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,165:server.Server.change_room:CALL *('guest', <server.Connection fd=640, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,165:server.Server.change_room:RETURN None
+TRACE:server.py,176:server.Server.connect:RETURN None
+TRACE:server.py,152:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=640, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,152:server.Server.parse_client_command:RETURN True
+TRACE:server.py,152:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'hello'}, <server.Connection fd=640, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,152:server.Server.parse_client_command:RETURN False

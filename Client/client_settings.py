@@ -1,7 +1,7 @@
 from os import makedirs
 from os.path import dirname, exists, abspath, isfile
 from json import load, dump
-from encryption import RSACrypt, AESCrypt
+from protocol import Protocol, RSACrypt, AESCrypt
 from hashlib import sha256
 from csv import reader, writer
 
@@ -28,13 +28,11 @@ class ClientSetting:
         self.log_path = dirname(abspath(__file__)) + '/Log/'
         self.server_public_key = b''
         self.aes_session_key = b''
-        self.private_key = b''
-        self.public_key = b''
         self.nickname = ''
         self.password = ''
         self.server_ip = ''
         self.port = 9191
-        print("Создай ещё файл с айпишниками, чтобы была возможность выбирать сервер.")
+        self.protocol = Protocol()
         
         if not exists(self.config_path):
             makedirs(self.config_path)
@@ -47,7 +45,6 @@ class ClientSetting:
     def add_new_configuration(self):
         with open('%s/server_list.csv' % self.config_path, "a+") as file:
             readed = file.read().split(',')
-            print(readed)
             new_line = '%s%s:%s' % (',' if len(readed) > 0 else '' ,self.server_ip, self.port)
             if not new_line in readed:
                 file.write(new_line)
@@ -73,9 +70,9 @@ class ClientSetting:
     def load_key(self):
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
         with open('%s/%s.pem' % (self.config_path, config_hash), "rb") as pem_file:
-            self.private_key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
-            self.RSA = RSACrypt(self.private_key)
-            self.public_key = self.RSA.export_public()
+            private_key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+            self.protocol.load_rsa(private_key)
+            self.RSA = self.protocol.RSA
 
     def save_key(self):
         config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()

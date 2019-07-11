@@ -61,7 +61,7 @@ class ConcreteObserver(Observer):
             self.observer_worker.recvVerif()
         if c_state == 1 and self.need_update:
             self.need_update = False
-            subject.server_command("server rooms")
+            subject.server_command({"cmd": "rooms"})
 
 
 class Connect(QtWidgets.QDialog):
@@ -149,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def changeRoom(self, item):
         self.ui.chat_list.clear()
-        self.client.server_command("server chroom %s" % item.text())
+        self.client.server_command({"cmd": "chroom", "value": item.text()})
 
     def recvMessage(self, msg, align=QtCore.Qt.AlignLeft):
         item = QtWidgets.QListWidgetItem(msg)
@@ -165,10 +165,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if key and ok:
             self.client.send_verification_key(str(key))
     
-    def loadRooms(self, msg:str):
-        rooms = msg.split(',')
+    def loadRooms(self, msg):
         self.ui.room_list.clear()
-        for room in rooms:
+        for room in msg:
             item = QtWidgets.QListWidgetItem(room)
             self.ui.room_list.addItem(item)
             

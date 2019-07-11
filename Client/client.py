@@ -6,15 +6,11 @@ import socket as s
 import threading
 from os import system
 from json import dumps, loads
-from protocol import Protocol
 from autologging import logged, traced
 from hashlib import sha256
-from encryption import AESCrypt, RSACrypt
 from client_settings import ClientSetting
 from abc import ABC, abstractmethod
 from typing import List
-from random import choice
-from string import ascii_letters, punctuation, digits
 from winsound import PlaySound, SND_ASYNC
 
 class STATEMENT:
@@ -86,61 +82,43 @@ class Client(Subject):
         print(self._CURRENT_MESSAGE, self._INFOTYPE, self._STATE)
         self.notify()
 
-    def iscrypted(self, data):
-        try:
-            data.decode('utf-8')
-            return False
-        except Exception:
-            return True
-
     def listen(self):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
-            try:
-                data = self.protocol.recv(self.sock)
-            except Exception:
+            data = self.setting.protocol.recv(self.sock, True)
+            if data:
+                keys = data.keys()
+                if self.rcv_output:
+                    self.rcv_output(data)
+                if "msg" in keys:
+                    PlaySound("audio/msg.wav", SND_ASYNC)
+                    self.change_message("[%s]: %s" % (data["nickname"], data["msg"]), INFOTYPE().MESSAGE)
+                elif "rooms" in keys:
+                    self.change_message(data["rooms"], INFOTYPE().ROOMS)
+                elif "info" in keys:
+                    self.change_message(data["info"], INFOTYPE().INFO)
+            else:
                 self._STATE = STATEMENT().DISCONNECTED
                 self.change_message('Current connection: none.', INFOTYPE().STATUSBAR)
                 self.close()
                 break
 
-            if self.iscrypted(data):
-                #data = self.setting.RSA.decrypt(data)
-                raw_data = loads(self.crypto.decrypt(data))
-                if self.rcv_output:
-                    self.rcv_output(raw_data)
-                else:
-                    PlaySound("audio/msg.wav", SND_ASYNC)
-                    self.change_message("[%s]: %s" % (raw_data["nickname"], raw_data["msg"]), INFOTYPE().MESSAGE)
-            else:
-                tmp = data.decode('utf-8').split(',')
-                if tmp[0] == "ROOMS:":
-                    self.change_message(','.join(tmp[1:]), INFOTYPE().ROOMS)
-                elif tmp[0] == "INROOM:":
-                    self.change_message(','.join(tmp[1:]), INFOTYPE().USERS)
-                else:
-                    self.change_message(data.decode('utf-8'), INFOTYPE().INFO)
-
     def login(self):
-        self.protocol.send("wanna_connect", self.sock) # Sending connection request to server.
+        self.setting.protocol.send({"wanna_connect": ""}, self.sock) # Sending connection request to server.
         while True:
-            response = self.protocol.recv(self.sock)
+            response = self.setting.protocol.recv(self.sock)
             if response:
-                response = response.decode('utf-8')
-                if response == "success":
-                    login_result = self.protocol.recv(self.sock)
-                    self.setting.aes_session_key = self.setting.RSA.decrypt(login_result.decode('utf-8'))
-                    self.crypto = AESCrypt(self.setting.aes_session_key)
+                response_keys = response.keys()
+                if "success" in response_keys:
+                    self.setting.protocol.aes_key = self.setting.RSA.decrypt(response["success"])
                     return True
-                elif response == "verification":
+                elif "verification" in response_keys:
                     self._STATE = STATEMENT().VERIFICATION
-                elif response == "key_error":
+                elif "key_error" in response_keys:
                     self.change_message("Keys don't match", INFOTYPE().STATUSBAR)
                     return False
-                elif response == "userdata":
-                    self.protocol.send(','.join([self.setting.nickname, self.setting.public_key.decode('utf-8')]), self.sock)
-                elif response == "server_puplic_key":
-                    self.setting.server_public_key = self.protocol.recv(self.sock).decode('utf-8') # Waiting server public rsa key.
+                elif "userdata" in response_keys:
+                    self.setting.protocol.send({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode('utf-8')}, self.sock)
                 else:
                     return False
             else:
@@ -155,7 +133,7 @@ class Client(Subject):
     
     def send_verification_key(self, key):
         key_hash = sha256(key.encode('utf-8')).hexdigest()
-        self.protocol.send(key_hash, self.sock)
+        self.setting.protocol.send(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):
         if self._STATE == STATEMENT().CONNECTED:
@@ -174,8 +152,6 @@ class Client(Subject):
                 return False
         self.setting.server_ip = ip
         self.setting.port = port
-
-        self.protocol = Protocol()
 
         if self.login():
             self.isLogined = True
@@ -202,12 +178,11 @@ class Client(Subject):
         self.connect(self.setting.server_ip, self.setting.port)
     
     def server_command(self, command) -> None:
-        self.protocol.send(command, self.sock)
+        self.setting.protocol.send(command, self.sock, True)
     
     def send(self, input_msg): #Message sending method
-        msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "salt": ''.join(choice(ascii_letters+digits+punctuation) for i in range(32))}
-        raw_data = self.crypto.encrypt(dumps(msg_data, ensure_ascii=False).encode('utf-8'))
-        self.protocol.send(raw_data, self.sock)
+        msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
+        self.setting.protocol.send(msg_data, self.sock, True)
     
     def set_password(self, new_password):
         self.setting.password = new_password

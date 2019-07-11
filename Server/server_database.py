@@ -5,7 +5,7 @@ from os.path import isfile, exists
 from hashlib import sha256
 from random import choice
 from string import ascii_letters, punctuation, digits
-from encryption import AESCrypt, RSACrypt
+from protocol import Protocol, AESCrypt, RSACrypt
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -159,10 +159,7 @@ class ServerSettings:
         self.enable_whitelist = False
         self.whitelist = []
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
-        self.private_key = b''
-        self.public_key = b''
-        self.aes_key_ = self.aes_key()
-        self.AES = AESCrypt(self.aes_key_)
+        self.protocol = Protocol()
 
         if isfile(self.config_path):
             if not isfile("private.pem"):
@@ -171,9 +168,6 @@ class ServerSettings:
             self.load()
         else:
             self.save()
-
-    def aes_key(self, length=32):
-        return sha256(''.join(choice(ascii_letters+punctuation+digits) for i in range(length)).encode('utf-8')).hexdigest()
 
     def encrypt_key(self, key, user_key):
         return RSACrypt().encrypt(key, user_key)
@@ -186,10 +180,6 @@ class ServerSettings:
         with open(self.config_path, "w") as config_file:
             self.config.write(config_file)
         self.save_key()
-    
-    def update_password(self, new_password):
-        self.server_password = sha256(new_password.encode('utf-8')).hexdigest()
-        self.save()
     
     def getlist(self, string):
         return (''.join(i for i in string if not i in ['[', ']', '\'', ' '])).split(',')
@@ -212,6 +202,5 @@ class ServerSettings:
         self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
         self.whitelist = self.getlist(self.config["SETTINGS"].get('white_list'))
         self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
-        self.private_key = self.load_key()
-        self.RSA = RSACrypt(self.private_key)
-        self.public_key = self.RSA.export_public()
+        private_key = self.load_key()
+        self.protocol.load_rsa(private_key)
