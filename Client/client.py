@@ -13,6 +13,8 @@ from abc import ABC, abstractmethod
 from typing import List
 from winsound import PlaySound, SND_ASYNC
 
+system('color')
+
 class STATEMENT:
         DISCONNECTED = 0
         CONNECTED = 1
@@ -86,6 +88,7 @@ class Client(Subject):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
             data = self.setting.protocol.recv(self.sock, True)
+            data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
             if data:
                 keys = data.keys()
                 if self.rcv_output:
@@ -106,7 +109,8 @@ class Client(Subject):
     def login(self):
         self.setting.protocol.send({"wanna_connect": ""}, self.sock) # Sending connection request to server.
         while True:
-            response = self.setting.protocol.recv(self.sock)
+            data = self.setting.protocol.recv(self.sock)
+            response = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
             if response:
                 response_keys = response.keys()
                 if "success" in response_keys:
@@ -118,7 +122,7 @@ class Client(Subject):
                     self.change_message("Keys don't match", INFOTYPE().STATUSBAR)
                     return False
                 elif "userdata" in response_keys:
-                    self.setting.protocol.send({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode('utf-8')}, self.sock)
+                    self.setting.protocol.send({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode()}, self.sock)
                 else:
                     return False
             else:
@@ -132,7 +136,7 @@ class Client(Subject):
         
     
     def send_verification_key(self, key):
-        key_hash = sha256(key.encode('utf-8')).hexdigest()
+        key_hash = sha256(key.encode()).hexdigest()
         self.setting.protocol.send(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):

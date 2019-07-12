@@ -1,7 +1,0 @@
-TRACE:server.py,127:server.Server.__init__:CALL *() **{}
-TRACE:server.py,127:server.Server.__init__:RETURN None
-TRACE:server.py,190:server.Server.run:CALL *() **{}
-TRACE:server.py,176:server.Server.connect:CALL *(<server.Connection fd=648, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
-TRACE:server.py,136:server.Server.handler:CALL *(<server.Connection fd=648, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
-TRACE:server.py,165:server.Server.change_room:CALL *('guest', <server.Connection fd=648, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
-TRACE:server.py,152:server.Server.parse_client_command:CALL *({'cmd': 'rooms', 'sign': 'rdfFnQOng3JLTM50H8+HqYqx1W31+OnRvqB4N2t8Wt82h23x67oRQtBepYBfOFlnlXl644vJx5VWSz4bxzHtFD/rH8bZNxsDvSbBdVwskvu6GnByJ2NHXuUD1vQdc1o1IRks2n5rgVUxr1IKGvnT1f+CYrXCEMQVdioxrWKswmo='}, <server.Connection fd=648, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}

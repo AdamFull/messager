@@ -5,10 +5,13 @@ import socket
 from threading import Thread
 from autologging import logged, traced
 from server_database import ServerDatabase, ServerSettings, RSACrypt
+from os import system
 
 STATE_READY = 0
 STATE_WORKING = 1
 STATE_STOPPING = 3
+
+system('color')
 
 class Connection(socket.socket):
     def __init__(self, connection:socket.socket, args):
@@ -41,7 +44,8 @@ class Room(object):
             self.users.pop(self.users.index(connection))
     
     def get_users(self):
-        return {"users": ''.join(user.nickname for user in self.users)}
+        print([user.nickname for user in self.users])
+        return {"users": [user.nickname for user in self.users]}
     
     def send(self, data, client:Connection):
         for connection in self.users:
@@ -55,7 +59,8 @@ class Registration:
         self.connection = connection
     
     def verificate(self, username):
-        data = self.setting.protocol.recv(self.connection.socket).decode('utf-8')
+        data = self.setting.protocol.recv(self.connection.socket).decode()
+        data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
         if data:
             # We are waiting for the code word from the user
             self.setting.protocol.send({"verification": ""}, self.connection.socket)
@@ -84,9 +89,12 @@ class Registration:
         '''This method is responsible for authorizing the client if it was registered,\n 
         and for registering if the client is not found.'''
         if not data:
-            if "wanna_connect" in self.setting.protocol.recv(self.connection.socket).keys():
+            data = self.setting.protocol.recv(self.connection.socket)
+            data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
+            if "wanna_connect" in data.keys():
                 self.setting.protocol.send({"userdata": ""}, self.connection.socket)
                 data = self.setting.protocol.recv(self.connection.socket)
+                data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
                 username, public_key = data["nickname"], data["public_key"]
         else:
             username, public_key = data[0], data[1]
@@ -134,13 +142,15 @@ class Server(socket.socket):
 
     def handler(self, client_connection:Connection):
         while self.state == STATE_WORKING and getattr(client_connection.thread, "do_run", True):
-            data = self.setting.protocol.recv(client_connection.socket, True)  # Reading client
-            if data:
+            try:
+                c_data = self.setting.protocol.recv(client_connection.socket, True)  # Reading client
+                data = self.setting.protocol.verify(c_data["data"], c_data["sign"], c_data["rsa"])
+            
                 if(self.parse_client_command(data, client_connection)):
                     continue
                 for room in self.rooms:
-                    room.send(data, client_connection)
-            else:
+                    room.send(c_data, client_connection)
+            except socket.error:
                 print(str(client_connection.nickname), "disconnected", len(self.connections))
                 for room in self.rooms:
                     room.disconnect(client_connection) # disconnect client from rooms
@@ -157,7 +167,8 @@ class Server(socket.socket):
                     self.change_room(data["value"], client_data)
                     return True
             if data["cmd"] == "rooms":
-                self.setting.protocol.send({"rooms": self.setting.server_rooms}, client_data.socket, True)
+                print(self.setting.server_rooms)
+                self.setting.protocol.send({"rooms": [room for room in self.setting.server_rooms]}, client_data.socket, True)
                 return True
         return False
 

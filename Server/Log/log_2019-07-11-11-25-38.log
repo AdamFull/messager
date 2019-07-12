@@ -1,8 +1,0 @@
-TRACE:server.py,132:server.Server.__init__:CALL *() **{}
-TRACE:server.py,132:server.Server.__init__:RETURN None
-TRACE:server.py,203:server.Server.run:CALL *() **{}
-TRACE:server.py,189:server.Server.connect:CALL *(<server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
-TRACE:server.py,144:server.Server.handler:CALL *(<server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
-TRACE:server.py,178:server.Server.change_room:CALL *('guest', <server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
-TRACE:server.py,178:server.Server.change_room:RETURN None
-TRACE:server.py,189:server.Server.connect:RETURN None

@@ -17,7 +17,7 @@ class Response:
         if not self.recv:
             return "empty_response"
         else:
-            self.recv = self.recv.decode('utf-8')
+            self.recv = self.recv.decode()
             if self.recv == "verificalion":
                 return "verificalion_response"
 
@@ -59,7 +59,7 @@ class ClientSetting:
             return lines[len(lines)-1]
 
     def load(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
         with open('%s/%s.json' % (self.config_path, config_hash) , "r") as read_f:
             data = load(read_f)
             self.nickname = data["nickname"]
@@ -68,22 +68,22 @@ class ClientSetting:
             self.port = data["port"]
     
     def load_key(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
         with open('%s/%s.pem' % (self.config_path, config_hash), "rb") as pem_file:
-            private_key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+            private_key = AESCrypt(sha256(self.password.encode()).hexdigest()).decrypt(pem_file.read())
             self.protocol.load_rsa(private_key)
             self.RSA = self.protocol.RSA
 
     def save_key(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
         if not isfile('%s/%s.pem' % (self.config_path, config_hash)):
             with open('%s/%s.pem' % (self.config_path, config_hash), "wb") as pem_file:
-                key = AESCrypt(sha256(self.password.encode('utf-8')).hexdigest()).encrypt(self.private_key)
+                key = AESCrypt(sha256(self.password.encode()).hexdigest()).encrypt(self.private_key)
                 pem_file.write(key)
 
     def save(self):
         self.add_new_configuration()
-        config_hash = sha256((self.server_ip + str(self.port)).encode('utf-8')).hexdigest()
+        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
         with open('%s/%s.json' % (self.config_path, config_hash), "w") as write_f:
             data = {"nickname" : self.nickname ,"password" : self.password,
             "ip" : self.server_ip, "port" : self.port}

@@ -129,7 +129,7 @@ class ServerDatabase(SqlInterface):
         return self.find(table_name, "username", username)[0][0]
     
     def make_hash(self, string):
-        return sha256(string.encode('utf-8')).hexdigest()
+        return sha256(string.encode()).hexdigest()
     
     def add_user_without_verification(self, username, public_key):
         self.insert("users", "username, public_key, verification", (username, public_key, True))
@@ -137,7 +137,7 @@ class ServerDatabase(SqlInterface):
     def add_user_with_verification(self, username, public_key):
         word = self.__generate_key(32)
         self.insert("users", "username, public_key, verification, invite_word", (username, public_key, False, word))
-        invite_hash = sha256(word.encode('utf-8')).hexdigest()
+        invite_hash = sha256(word.encode()).hexdigest()
         self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
     
     def verificate_user(self, username, invite_hash):
@@ -186,11 +186,11 @@ class ServerSettings:
     
     def load_key(self):
         with open('private.pem', "rb") as pem_file:
-            return AESCrypt(sha256(self.server_ip.encode('utf-8')).hexdigest()).decrypt(pem_file.read())
+            return AESCrypt(sha256(self.server_ip.encode()).hexdigest()).decrypt(pem_file.read())
 
     def save_key(self):
         with open('private.pem', "wb") as pem_file:
-            key = AESCrypt(sha256(self.server_ip.encode('utf-8')).hexdigest()).encrypt(self.private_key)
+            key = AESCrypt(sha256(self.server_ip.encode()).hexdigest()).encrypt(self.private_key)
             pem_file.write(key)
 
     def load(self):

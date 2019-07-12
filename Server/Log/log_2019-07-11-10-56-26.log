@@ -1,4 +1,0 @@
-TRACE:server.py,132:server.Server.__init__:CALL *() **{}
-TRACE:server.py,132:server.Server.__init__:RETURN None
-TRACE:server.py,202:server.Server.run:CALL *() **{}
-TRACE:server.py,188:server.Server.connect:CALL *(<server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
