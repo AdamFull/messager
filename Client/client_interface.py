@@ -6,6 +6,7 @@ from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
 from client_settings import ClientSetting
 import time
+from random import randrange as rr
 
 # pyuic5 main_window.ui -o main_window.py
 # pyuic5 connect_dialog.ui -o connect_dialog.py
@@ -139,6 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.statusbar.showMessage("Disconnected.")
         self.ui.chat_list.setWordWrap(True)
         self.ui.room_list.setWordWrap(True)
+        self.ui.room_list.setIconSize(QtCore.QSize(45, 45))
     
     def sendMessage(self):
         msg = self.ui.message_box.text()
@@ -169,6 +171,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.room_list.clear()
         for room in msg:
             item = QtWidgets.QListWidgetItem(room)
+            item.setSizeHint(QtCore.QSize(0, 50))
+            item.setTextAlignment(QtCore.Qt.AlignLeft)
+            pixmap = QtGui.QPixmap(45, 45)
+            pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
+            item.setIcon(QtGui.QIcon(pixmap))
             self.ui.room_list.addItem(item)
             
     def disconnect_(self) -> None:

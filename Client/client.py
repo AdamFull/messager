@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import __future__
-import socket as s
+import socket
 import threading
 from os import system
 from json import dumps, loads
@@ -52,7 +52,7 @@ class Observer(ABC):
 @traced
 @logged
 class Client(Subject):
-    sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _STATE: int = STATEMENT().DISCONNECTED # Current client state
     _INFOTYPE: INFOTYPE = INFOTYPE().NONE
     _CURRENT_MESSAGE: str = ''             # Current client message
@@ -87,30 +87,29 @@ class Client(Subject):
     def listen(self):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
-            data = self.setting.protocol.recv(self.sock, True)
-            data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
-            if data:
-                keys = data.keys()
-                if self.rcv_output:
-                    self.rcv_output(data)
-                if "msg" in keys:
-                    PlaySound("audio/msg.wav", SND_ASYNC)
-                    self.change_message("[%s]: %s" % (data["nickname"], data["msg"]), INFOTYPE().MESSAGE)
-                elif "rooms" in keys:
-                    self.change_message(data["rooms"], INFOTYPE().ROOMS)
-                elif "info" in keys:
-                    self.change_message(data["info"], INFOTYPE().INFO)
-            else:
+            try:
+                data = self.setting.protocol.recvwv(self.sock)
+                if data:
+                    keys = data.keys()
+                    if self.rcv_output:
+                        self.rcv_output(data)
+                    if "msg" in keys:
+                        PlaySound("audio/msg.wav", SND_ASYNC)
+                        self.change_message("[%s]: %s" % (data["nickname"], data["msg"]), INFOTYPE().MESSAGE)
+                    elif "rooms" in keys:
+                        self.change_message(data["rooms"], INFOTYPE().ROOMS)
+                    elif "info" in keys:
+                        self.change_message(data["info"], INFOTYPE().INFO)
+            except socket.error:
                 self._STATE = STATEMENT().DISCONNECTED
                 self.change_message('Current connection: none.', INFOTYPE().STATUSBAR)
                 self.close()
                 break
 
     def login(self):
-        self.setting.protocol.send({"wanna_connect": ""}, self.sock) # Sending connection request to server.
+        self.setting.protocol.request({"wanna_connect": ""}, self.sock) # Sending connection request to server.
         while True:
-            data = self.setting.protocol.recv(self.sock)
-            response = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
+            response = self.setting.protocol.response(self.sock)
             if response:
                 response_keys = response.keys()
                 if "success" in response_keys:
@@ -122,7 +121,7 @@ class Client(Subject):
                     self.change_message("Keys don't match", INFOTYPE().STATUSBAR)
                     return False
                 elif "userdata" in response_keys:
-                    self.setting.protocol.send({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode()}, self.sock)
+                    self.setting.protocol.request({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode()}, self.sock)
                 else:
                     return False
             else:
@@ -132,12 +131,10 @@ class Client(Subject):
                     self.change_message("Waiting server response.", INFOTYPE().STATUSBAR)
                 continue
         return False
-        
-        
     
     def send_verification_key(self, key):
         key_hash = sha256(key.encode()).hexdigest()
-        self.setting.protocol.send(key_hash, self.sock)
+        self.setting.protocol.sendws(key_hash, self.sock)
 
     def connect(self, ip, port, attempts = 5):
         if self._STATE == STATEMENT().CONNECTED:
@@ -145,7 +142,7 @@ class Client(Subject):
             return False
         self.change_message("Trying to connect: %s:%s" % (ip, port), INFOTYPE().STATUSBAR)
         try:
-            self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((ip, port))
         except Exception as e:
             if attempts > 0:
@@ -182,11 +179,11 @@ class Client(Subject):
         self.connect(self.setting.server_ip, self.setting.port)
     
     def server_command(self, command) -> None:
-        self.setting.protocol.send(command, self.sock, True)
+        self.setting.protocol.send(command, self.sock)
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg}
-        self.setting.protocol.send(msg_data, self.sock, True)
+        self.setting.protocol.sendws(msg_data, self.sock)
     
     def set_password(self, new_password):
         self.setting.password = new_password

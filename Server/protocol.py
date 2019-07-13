@@ -64,49 +64,79 @@ class Protocol:
         self.public_rsa_key = self.private_rsa_key.publickey()
     
     def sign(self, data):
+        '''The method puts a digital signature on the message.'''
         signer = PKCS1_v1_5.new(self.private_rsa_key)
         digest = SHA256.new(data.encode())
-        sign = b64encode(signer.sign(digest))
-        return sign
+        return b64encode(signer.sign(digest))
     
-    def verify(self, data, sign, public_key, rsa=False):
+    def verify(self, data, sign, public_key, sock=None):
+        '''The method verifies the client’s digital signature,\n
+        if the signature has passed verification, the message remains,\n
+        otherwise the client’s socket is closed.'''
         signer = PKCS1_v1_5.new(RSA.importKey(public_key))
         digest = SHA256.new(data.encode())
         if signer.verify(digest, b64decode(sign)):
             return loads(data)
         else:
-            return None
+            sock.close()
     
-    def send(self, information, sock, aes=False, rsa=False):
-        if not "sign" in information.keys():
-            data = self.RSA.encrypt(dumps(information, ensure_ascii=False)) if rsa else dumps(information, ensure_ascii=False)
-            information = ({
-                "data": data,
-                "sign": self.sign(data).decode(), 
-                "rsa": self.RSA.export_public().decode()})
-        byte_string = dumps(information).encode()
-        if aes:
-            byte_string = AESCrypt(self.aes_key).encrypt(byte_string)
+    def request(self, information, sock):
+        byte_string = dumps(information, ensure_ascii=False).encode()
         data = struct.pack('>I', len(byte_string)) + byte_string
         sock.sendall(data)
-
-    def recv(self, sock, aes=False): #Message receiving method
+    
+    def response(self, sock):
         raw_msglen = self.recvall(4, sock)
         if not raw_msglen:
             return None
         msglen = struct.unpack('>I', raw_msglen)[0]
         data = self.recvall(msglen, sock)
         if data:
-            if aes:
-                data = loads(AESCrypt(self.aes_key).decrypt(data).decode())
-                return data
-            else:
-                data = loads(data.decode())
-                return data
+            return loads(data.decode())
         else:
             return None
+    
+    def send(self, information, sock):
+        '''The method of sending messages.\n
+        Can encrypt messages before sending, or not encrypt.'''
+        byte_string = AESCrypt(self.aes_key).encrypt(dumps(information).encode())
+        data = struct.pack('>I', len(byte_string)) + byte_string
+        sock.sendall(data)
+    
+    def sendws(self, information, sock):
+        '''The method of sending messages with a digital signature.\n
+        When sending a message, it adds the signature and public key of the sender.'''
+        data = dumps(information, ensure_ascii=False)
+        if not "sign" in information.keys():
+            information = ({
+                    "data": data,
+                    "sign": self.sign(data).decode(), 
+                    "rsa": self.RSA.export_public().decode()})
+        self.send(information, sock)
 
-    def recvall(self, n, sock): #Вспомогательный метод для принятия сообщений, читает из сокета
+    def recv(self, sock):
+        '''The method of receiving messages.\n
+            This method can receive messages using and without encryption.'''
+        raw_msglen = self.recvall(4, sock)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        data = self.recvall(msglen, sock)
+        if data:
+            return loads(AESCrypt(self.aes_key).decrypt(data).decode())
+        else:
+            return None
+    
+    def recvwv(self, sock):
+        '''The method of receiving messages with an digital signature.\n
+        Upon receipt, the signature is verified, and if it matches,\n
+        the message is converted to readable, otherwise the user will be kicked out of the server.'''
+        data = self.recv(sock)
+        return self.verify(data["data"], data["sign"], data["rsa"], sock)
+
+    def recvall(self, n, sock):
+        '''A helper method for accepting messages,\n
+        first reading bytes from the socket, and then the message.'''
         data = b''
         while len(data) < n:
             packet = sock.recv(n - len(data))

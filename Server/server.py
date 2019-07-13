@@ -50,7 +50,7 @@ class Room(object):
     def send(self, data, client:Connection):
         for connection in self.users:
             if connection != client and client in self.users:
-                self.protocol.send(data, connection.socket, True)
+                self.protocol.sendws(data, connection.socket)
 
 class Registration:
     def __init__(self, connection:Connection, setting:ServerSettings):
@@ -59,11 +59,10 @@ class Registration:
         self.connection = connection
     
     def verificate(self, username):
-        data = self.setting.protocol.recv(self.connection.socket).decode()
-        data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
+        data = self.setting.protocol.response(self.connection.socket).decode()
         if data:
             # We are waiting for the code word from the user
-            self.setting.protocol.send({"verification": ""}, self.connection.socket)
+            self.setting.protocol.request({"verification": ""}, self.connection.socket)
         else:
             print('Client lost connection.')
             return False
@@ -89,12 +88,10 @@ class Registration:
         '''This method is responsible for authorizing the client if it was registered,\n 
         and for registering if the client is not found.'''
         if not data:
-            data = self.setting.protocol.recv(self.connection.socket)
-            data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
+            data = self.setting.protocol.response(self.connection.socket)
             if "wanna_connect" in data.keys():
-                self.setting.protocol.send({"userdata": ""}, self.connection.socket)
-                data = self.setting.protocol.recv(self.connection.socket)
-                data = self.setting.protocol.verify(data["data"], data["sign"], data["rsa"])
+                self.setting.protocol.request({"userdata": ""}, self.connection.socket)
+                data = self.setting.protocol.response(self.connection.socket)
                 username, public_key = data["nickname"], data["public_key"]
         else:
             username, public_key = data[0], data[1]
@@ -106,17 +103,17 @@ class Registration:
             if self.server_database.is_user_verificated(username):
                 if self.server_database.is_keys_match(username, public_key):
                     key = self.setting.encrypt_key(self.setting.protocol.aes_key, public_key)
-                    self.setting.protocol.send({"success": key.decode()}, self.connection.socket)
+                    self.setting.protocol.request({"success": key.decode()}, self.connection.socket)
                     return True
                 else:
-                    self.setting.protocol.send({"key_error": ""}, self.connection.socket)
+                    self.setting.protocol.request({"key_error": ""}, self.connection.socket)
                     return False
             else:
                 if self.verificate(username):
                     self.signin([username, str(public_key)])
                     return True
                 else:
-                    self.setting.protocol.send({"verification_error": ""}, self.connection.socket)
+                    self.setting.protocol.request({"verification_error": ""}, self.connection.socket)
                     return False
         else:
             if self.signup([username, str(public_key)]):
@@ -143,13 +140,12 @@ class Server(socket.socket):
     def handler(self, client_connection:Connection):
         while self.state == STATE_WORKING and getattr(client_connection.thread, "do_run", True):
             try:
-                c_data = self.setting.protocol.recv(client_connection.socket, True)  # Reading client
-                data = self.setting.protocol.verify(c_data["data"], c_data["sign"], c_data["rsa"])
+                data = self.setting.protocol.recv(client_connection.socket)  # Reading client
             
                 if(self.parse_client_command(data, client_connection)):
                     continue
                 for room in self.rooms:
-                    room.send(c_data, client_connection)
+                    room.send(data, client_connection)
             except socket.error:
                 print(str(client_connection.nickname), "disconnected", len(self.connections))
                 for room in self.rooms:
@@ -168,20 +164,20 @@ class Server(socket.socket):
                     return True
             if data["cmd"] == "rooms":
                 print(self.setting.server_rooms)
-                self.setting.protocol.send({"rooms": [room for room in self.setting.server_rooms]}, client_data.socket, True)
+                self.setting.protocol.sendws({"rooms": [room for room in self.setting.server_rooms]}, client_data.socket)
                 return True
         return False
 
     def change_room(self, room_id, client_data:Connection):
         '''This method allows the user to switch between rooms.'''
         if not room_id in self.setting.server_rooms:
-            self.setting.protocol.send({"info": "Room %s not found."} % room_id, client_data.socket, True)
+            self.setting.protocol.sendws({"info": "Room %s not found."} % room_id, client_data.socket)
             return
         for room in self.rooms:
             room.disconnect(client_data)
             if room.name == room_id:
                 room.connect(client_data)
-                self.setting.protocol.send({"users": room.get_users()}, client_data.socket, True)
+                self.setting.protocol.sendws({"users": room.get_users()}, client_data.socket)
 
     def connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
