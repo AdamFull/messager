@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
-from ui.server_list import Ui_serverList
+from ui.server_list import Ui_dialog_layout
 from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
 from client_settings import ClientSetting
@@ -66,10 +66,12 @@ class ConcreteObserver(Observer):
 
 
 class Connect(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, client, parent=None):
         super(Connect, self).__init__(parent)
         self.ui = Ui_AddServer()
         self.ui.setupUi(self)
+
+        self.client = client
 
         self.ui.server_ip.setText('localhost')
         self.ui.server_port.setValue(9191)
@@ -80,10 +82,22 @@ class Connect(QtWidgets.QDialog):
         self.ui.connect_btn.clicked.connect(self.connect)
         self.ui.cancel_btn.clicked.connect(self.close)
         self.ui.new_tab_btn.clicked.connect(self.new_window)
+        self.load()
     
     def new_window(self):
         print("SOON")
         pass
+    
+    def load(self):
+        last_conf = self.client.setting.get_last()
+        if last_conf:
+            self.client.setting.server_ip, self.client.setting.port = last_conf.split(':')
+            self.client.setting.load()
+            self.ui.server_ip.setText(self.client.setting.server_ip)
+            self.ui.server_port.setValue(self.client.setting.port)
+            self.ui.nickname.setText(self.client.setting.nickname)
+            self.ui.password.setText(self.client.setting.password)
+            self.ui.confirm.setText(self.client.setting.password)
 
     def connect(self):
         if self.ui.password.text() == self.ui.confirm.text():
@@ -94,14 +108,43 @@ class Connect(QtWidgets.QDialog):
             self.accept()
 
 class ServerList(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, client, parent=None):
         super(ServerList, self).__init__(parent)
-        self.ui = Ui_serverList()
+        self.ui = Ui_dialog_layout()
         self.ui.setupUi(self)
-        self.load()
+
+        self.client = client
+        self.load_list()
+        
+        self.ui.connect_btn.clicked.connect(self.load)
+        self.ui.remove_btn.clicked.connect(self.remove)
+        self.ui.cancel_btn.clicked.connect(self.close)
+
+        self.server_ip = ''
+        self.port = 0000
     
+    def load_list(self):
+        self.ui.server_list.clear()
+        for srv in self.client.setting.load_configurations().keys():
+            item = QtWidgets.QListWidgetItem(srv)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            pixmap = QtGui.QPixmap(45, 45)
+            pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
+            item.setIcon(QtGui.QIcon(pixmap))
+            self.ui.server_list.addItem(item)
+
+    def remove(self):
+        c_item = self.ui.server_list.currentItem().text()
+        if c_item:
+            self.client.setting.remove_configuration(c_item)
+            self.load_list()
+
     def load(self):
-        pass
+        c_item = self.ui.server_list.currentItem().text()
+        if c_item:
+            self.server_ip, self.port = c_item.split(':')
+            self.client.setting.set_last(c_item)
+            self.accept()
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent = None):
@@ -126,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Menu actions
         self.ui.actionConnect.triggered.connect(self.connect)
         self.ui.actionDisconnect_from_current.triggered.connect(self.disconnect_)
-        self.ui.actionServer_list.triggered.connect(print)
+        self.ui.actionServer_list.triggered.connect(self.server_list)
 
         # Other actions...
 
@@ -182,13 +225,23 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.client.isLogined:
             self.client.disconnect()
             self.thread__.join()
+    
+    def server_list(self):
+        dialog = ServerList(self.client)
+        if dialog.exec_()==QtWidgets.QDialog.Accepted:
+            self.client.setting.server_ip = dialog.server_ip
+            self.client.setting.port = dialog.port
+        else:
+            return
+        self.client.setting.load()
+        self.run_connection()
 
     def run_connection(self):
         self.thread__ = Thread(target=self.client.run)
         self.thread__.start()
 
     def connect(self):
-        dialog = Connect()
+        dialog = Connect(self.client)
         if dialog.exec_()==QtWidgets.QDialog.Accepted:
             self.client.setting.server_ip = dialog.server_ip
             self.client.setting.port = dialog.port

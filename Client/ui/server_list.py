@@ -8,37 +8,37 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_serverList(object):
-    def setupUi(self, serverList):
-        serverList.setObjectName("serverList")
-        serverList.resize(339, 229)
-        serverList.setMinimumSize(QtCore.QSize(339, 229))
-        serverList.setMaximumSize(QtCore.QSize(339, 229))
-        self.verticalLayout = QtWidgets.QVBoxLayout(serverList)
+class Ui_dialog_layout(object):
+    def setupUi(self, dialog_layout):
+        dialog_layout.setObjectName("dialog_layout")
+        dialog_layout.resize(354, 201)
+        dialog_layout.setMinimumSize(QtCore.QSize(354, 201))
+        dialog_layout.setMaximumSize(QtCore.QSize(354, 201))
+        self.verticalLayout = QtWidgets.QVBoxLayout(dialog_layout)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.server_list = QtWidgets.QListWidget(serverList)
+        self.server_list = QtWidgets.QListWidget(dialog_layout)
         self.server_list.setObjectName("server_list")
         self.verticalLayout.addWidget(self.server_list)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.connect_btn = QtWidgets.QPushButton(serverList)
+        self.buttons_layout = QtWidgets.QHBoxLayout()
+        self.buttons_layout.setObjectName("buttons_layout")
+        self.connect_btn = QtWidgets.QPushButton(dialog_layout)
         self.connect_btn.setObjectName("connect_btn")
-        self.horizontalLayout.addWidget(self.connect_btn)
-        self.delete_btn = QtWidgets.QPushButton(serverList)
-        self.delete_btn.setObjectName("delete_btn")
-        self.horizontalLayout.addWidget(self.delete_btn)
-        self.cancel_btn = QtWidgets.QPushButton(serverList)
+        self.buttons_layout.addWidget(self.connect_btn)
+        self.remove_btn = QtWidgets.QPushButton(dialog_layout)
+        self.remove_btn.setObjectName("remove_btn")
+        self.buttons_layout.addWidget(self.remove_btn)
+        self.cancel_btn = QtWidgets.QPushButton(dialog_layout)
         self.cancel_btn.setObjectName("cancel_btn")
-        self.horizontalLayout.addWidget(self.cancel_btn)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.buttons_layout.addWidget(self.cancel_btn)
+        self.verticalLayout.addLayout(self.buttons_layout)
 
-        self.retranslateUi(serverList)
-        QtCore.QMetaObject.connectSlotsByName(serverList)
+        self.retranslateUi(dialog_layout)
+        QtCore.QMetaObject.connectSlotsByName(dialog_layout)
 
-    def retranslateUi(self, serverList):
+    def retranslateUi(self, dialog_layout):
         _translate = QtCore.QCoreApplication.translate
-        serverList.setWindowTitle(_translate("serverList", "Server List"))
-        self.connect_btn.setText(_translate("serverList", "Connect"))
-        self.delete_btn.setText(_translate("serverList", "Delete"))
-        self.cancel_btn.setText(_translate("serverList", "Cancel"))
+        dialog_layout.setWindowTitle(_translate("dialog_layout", "Select server"))
+        self.connect_btn.setText(_translate("dialog_layout", "Connect"))
+        self.remove_btn.setText(_translate("dialog_layout", "Remove"))
+        self.cancel_btn.setText(_translate("dialog_layout", "Cancel"))
 
