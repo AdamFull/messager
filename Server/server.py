@@ -5,18 +5,15 @@ import socket
 from threading import Thread
 from autologging import logged, traced
 from server_database import ServerDatabase, ServerSettings, RSACrypt
-from os import system
 
 STATE_READY = 0
 STATE_WORKING = 1
 STATE_STOPPING = 3
 
-system('color')
-
 class Connection(socket.socket):
     def __init__(self, connection:socket.socket, args):
         super(Connection, self).__init__()
-        self.socket: s.socket = connection
+        self.socket: socket.socket = connection
         self.status = ''
         self.connection_status = False
         self.ip: str = args[0]

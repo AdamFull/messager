@@ -109,6 +109,7 @@ class ServerDatabase(SqlInterface):
         self.create_database(self.database_path)
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
+        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, room TEXT, role TEXT")
 
     def __generate_key(self, length):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
@@ -147,6 +148,7 @@ class ServerDatabase(SqlInterface):
             return True
         else:
             return False
+    
 
 class ServerSettings:
     def __init__(self):

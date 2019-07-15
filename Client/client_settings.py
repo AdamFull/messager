@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 from os import makedirs
 from os.path import dirname, exists, abspath, isfile
 from json import load, dump

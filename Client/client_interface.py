@@ -1,11 +1,16 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+from PyQt5 import QtWidgets, QtGui, QtCore, Qt
 from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
 from ui.server_list import Ui_dialog_layout
 from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
 from client_settings import ClientSetting
-import time
+from sys import version_info
+from os import system
+import platform
 from random import randrange as rr
 
 # pyuic5 main_window.ui -o main_window.py
@@ -201,6 +206,7 @@ class MainWindow(QtWidgets.QMainWindow):
         item.setTextAlignment(align)
         self.ui.chat_list.addItem(item)
         self.ui.chat_list.scrollToItem(item)
+        Qt.QSound.play("audio/msg.wav")
     
     def loadUsers(self, msg):
         print(msg)
@@ -260,6 +266,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
+    assert version_info >= (3, 6), "Your python version is %s.%s.%s_%s_%s. Version 3.6 and above are required for correct work." % version_info
+    if platform.system() == "Windows":
+        system("pip install -r requirements.txt")
+    else:
+        system("pip3 install -r requirements.txt")
     app = QtWidgets.QApplication([])
     application = MainWindow()
     application.show()
