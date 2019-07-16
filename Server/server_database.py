@@ -7,6 +7,8 @@ from random import choice
 from string import ascii_letters, punctuation, digits
 from protocol import Protocol, AESCrypt, RSACrypt
 
+sha = lambda X: sha256(X.encrypt()).hexdigest()
+
 class SqlInterface:
     def __init__(self, dbname=None):
         self.connection = None
@@ -76,7 +78,7 @@ class SqlInterface:
         query = 'UPDATE %s SET %s WHERE "id" = ?;' % (table_name, ' = ?, '.join(cols) + ' = ?')
         self.cursor.execute(query, values)
         self.connection.commit()
-    
+
     def delete(self, table_name, id):
         query = 'DELETE FROM %s WHERE id = ?;' % table_name
         self.cursor.execute(query, str(id))
@@ -110,6 +112,60 @@ class ServerDatabase(SqlInterface):
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
         self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, room TEXT, role TEXT")
+        self.create_table("friends", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, friend TEXT")
+
+    def add_to_accessories(self, user, room, role):
+        self.insert("accessories", "username, room, role", (user, room, role))
+    
+    def remove_from_accessories(self, user, room):
+        self.query('DELETE FROM %s WHERE username=%s AND room=%s' % ("accessories", user, room))
+    
+    def create_room(self, room_name, user):
+        self.create_table(sha(room_name), "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, setting TEXT, value TEXT")
+        self.insert(sha(room_name), "description, send_messages, send_media, send_stickers, embded_links, send_polls, add_members, pin_messages, change_group_info",
+                                    ("It is group", "T", "T", "T", "T", "T", "T", "T", "T"))
+        self.add_to_accessories(user, room_name, "owner")
+    
+    def load_room(self, room_name):
+        self.query('SELECT * FROM %s;' % (sha(room_name)))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def remove_room(self, room_name):
+        self.delete_table(sha(room_name))
+        self.query('DELETE FROM %s WHERE room=%s;' % ("accessories", room_name))
+    
+    def get_users_in_room(self, room_name):
+        self.query('SELECT user FROM %s WHERE room=%s;' % ("accessories", room_name))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def get_rooms(self):
+        self.query('SELECT room FROM %s;' % "accessories")
+    
+    def get_user_rooms(self, user):
+        self.query('SELECT room FROM %s WHERE user=%s;' % ("accessories", user))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def get_finded_users(self, username):
+        self.query('SELECT username FROM %s WHERE username LIKE %s' % ("users", username))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def get_finded_rooms(self, room_name):
+        self.query('SELECT room FROM %s WHERE room LIKE %s;' % ("accessories", room_name))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def get_friends(self, user):
+        self.query('SELECT friend FROM %s WHERE username= %s;' % ("friends", user))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def add_friend(self, user, friend):
+        self.insert("friends", "username, friend", (user, friend))
+
 
     def __generate_key(self, length):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
@@ -129,16 +185,13 @@ class ServerDatabase(SqlInterface):
     def get_user_id(self, table_name, username):
         return self.find(table_name, "username", username)[0][0]
     
-    def make_hash(self, string):
-        return sha256(string.encode()).hexdigest()
-    
     def add_user_without_verification(self, username, public_key):
         self.insert("users", "username, public_key, verification", (username, public_key, True))
     
     def add_user_with_verification(self, username, public_key):
         word = self.__generate_key(32)
         self.insert("users", "username, public_key, verification, invite_word", (username, public_key, False, word))
-        invite_hash = sha256(word.encode()).hexdigest()
+        invite_hash = sha(word)
         self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
     
     def verificate_user(self, username, invite_hash):
@@ -188,11 +241,11 @@ class ServerSettings:
     
     def load_key(self):
         with open('private.pem', "rb") as pem_file:
-            return AESCrypt(sha256(self.server_ip.encode()).hexdigest()).decrypt(pem_file.read())
+            return AESCrypt(sha(self.server_ip)).decrypt(pem_file.read())
 
     def save_key(self):
         with open('private.pem', "wb") as pem_file:
-            key = AESCrypt(sha256(self.server_ip.encode()).hexdigest()).encrypt(self.private_key)
+            key = AESCrypt(sha(self.server_ip)).encrypt(self.private_key)
             pem_file.write(key)
 
     def load(self):

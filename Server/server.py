@@ -21,33 +21,19 @@ class Connection(socket.socket):
         self.nickname = ''
         self.rsa_public = ''
         self.thread: Thread = None
+    
+    def getSokcet(self, name):
+        if self.nickname == name:
+            return self.socket
 
 class Room(object):
     #List[Connection]
-    def __init__(self, name, protocol):
+    def __init__(self, name, protocol, database):
         super(Room, self).__init__()
         self.name = name
-        self.users = list()
-        self.protocol = protocol
-    
-    def connect(self, connection:Connection) -> None:
-        if not connection in self.users:
-            self.users.append(connection)
-            self.send({"info": "%s connected to chat." % connection.nickname}, connection)
-    
-    def disconnect(self, connection:Connection) -> None:
-        if connection in self.users:
-            self.send({"info": "%s left the chat." % connection.nickname}, connection)
-            self.users.pop(self.users.index(connection))
-    
-    def get_users(self):
-        print([user.nickname for user in self.users])
-        return {"users": [user.nickname for user in self.users]}
-    
+
     def send(self, data, client:Connection):
-        for connection in self.users:
-            if connection != client and client in self.users:
-                self.protocol.sendws(data, connection.socket)
+        self.protocol.sendws(data, connection.socket)
 
 class Registration:
     def __init__(self, connection:Connection, setting:ServerSettings):
@@ -128,11 +114,12 @@ class Server(socket.socket):
     def __init__(self):
         super(Server, self).__init__(socket.AF_INET, socket.SOCK_STREAM) # Creating network socket for server
         self.setting = ServerSettings()
+        self.database = ServerDatabase()
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # This allows you to use a socket even if it was not properly closed.
         self.bind((self.setting.server_ip, self.setting.server_port))  # Configure server socket
         self.listen(self.setting.maximum_users)  # Listen socket N connections
         self.state = STATE_READY
-        self.rooms = [Room(name, self.setting.protocol) for name in self.setting.server_rooms]
+        self.rooms = [Room(name, self.setting.protocol, self.database) for name in self.database.get_rooms()]
 
     def handler(self, client_connection:Connection):
         while self.state == STATE_WORKING and getattr(client_connection.thread, "do_run", True):
@@ -183,7 +170,6 @@ class Server(socket.socket):
             client_data.thread.daemon = True
             client_data.thread.start()
             self.connections.append(client_data)
-            self.change_room("guest", client_data)
             print(str(client_data.nickname), "connected", len(self.connections))
         else:
             print('Connection denied.')
