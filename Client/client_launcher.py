@@ -1,3 +1,6 @@
+#!/usr/bin/python3.6
+# -*- coding: utf-8 -*-
+
 from client import Client, ClientSetting
 from autologging import logged, TRACE, traced
 from logging import basicConfig
