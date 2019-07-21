@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 import struct
 from json import dumps, loads
 from Crypto import Random

@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import __future__
@@ -11,6 +11,9 @@ from hashlib import sha256
 from client_settings import ClientSetting
 from abc import ABC, abstractmethod
 from typing import List
+from winsound import PlaySound, SND_ASYNC
+
+system('color')
 
 class STATEMENT:
         DISCONNECTED = 0
@@ -91,6 +94,7 @@ class Client(Subject):
                     if self.rcv_output:
                         self.rcv_output(data)
                     if "msg" in keys:
+                        PlaySound("audio/msg.wav", SND_ASYNC)
                         self.change_message("[%s]: %s" % (data["nickname"], data["msg"]), INFOTYPE().MESSAGE)
                     elif "rooms" in keys:
                         self.change_message(data["rooms"], INFOTYPE().ROOMS)

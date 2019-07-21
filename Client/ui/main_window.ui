@@ -37,33 +37,7 @@
      <number>1</number>
     </property>
     <item>
-     <layout class="QVBoxLayout" name="room_layout">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <layout class="QHBoxLayout" name="search_layout" stretch="6">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QLineEdit" name="search_line"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QListWidget" name="room_list"/>
-      </item>
-     </layout>
+     <widget class="QListWidget" name="room_list"/>
     </item>
     <item>
      <layout class="QVBoxLayout" name="chat_layout">
