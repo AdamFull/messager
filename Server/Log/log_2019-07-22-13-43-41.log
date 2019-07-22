@@ -1,0 +1,67 @@
+TRACE:server.py,128:server.Server.__init__:CALL *() **{}
+TRACE:server.py,128:server.Server.__init__:RETURN None
+TRACE:server.py,193:server.Server.run:CALL *() **{}
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=572, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=572, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=572, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=572, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=628, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=628, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=628, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=628, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=616, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=616, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=616, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=616, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'data': '{"nickname": "nagibator228", "msg": "ijsdjsoa", "chat": null, "time": "10:49:01", "date": "2019-07-22"}', 'sign': 'c/P9CRzqKOc+MRukIei2Q1gs0wOoLT32irgQiViPGgJMitJW9+5MTNam6nd4T6w1H86WrrGhrm6Vwja5ZL9XxAZx2tXs8Xz1HFK9PgmSgNjbp/FZ3XjS4/mYSKhfbYDnfGw4rBcpQVmTnSARNSF6QcwuLr543lHa4OZ38Chq2rk=', 'rsa': '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQClRJDPhGFXFrqLBA6pT652LqZ5\nbCKz0pwr0GPunFsEWXhJ4i+jENiIKf03fmpSoStuXdkubevpdIdP1ulLrmCiaOeV\nR/Lu1Jb/ccCi3WxmZEEgwJjtouZTSaWpXDRH+43mb80VA9FoErm9BYIMDm2XhAPx\nngH95hN4pXZKcEaUMwIDAQAB\n-----END PUBLIC KEY-----'}, <server.Connection fd=616, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:RETURN False
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'data': '{"nickname": "nagibator2281", "msg": "hello", "chat": null, "time": "10:49:17", "date": "2019-07-22"}', 'sign': 'M1kmnxtAHBlHUVtnc/2ZEQ5/z5Mo1I9DWSHry1k7UXPoUgQ9f/5vUdqCmYNsgopj28yWdiDL0r3V0/7wabqzrq2Ap22MNNd0FCODomC5elivUmCF8L0zfJViH+i25JMy2lL1z7US+DCWtS1/1C6lzB5v1ruZkuL36p/vaQlkyHo=', 'rsa': '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQClRJDPhGFXFrqLBA6pT652LqZ5\nbCKz0pwr0GPunFsEWXhJ4i+jENiIKf03fmpSoStuXdkubevpdIdP1ulLrmCiaOeV\nR/Lu1Jb/ccCi3WxmZEEgwJjtouZTSaWpXDRH+43mb80VA9FoErm9BYIMDm2XhAPx\nngH95hN4pXZKcEaUMwIDAQAB\n-----END PUBLIC KEY-----'}, <server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:RETURN False
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=676, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'chroom', 'value': 'guest'}, <server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=580, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,137:server.Server.handler:CALL *(<server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,179:server.Server.connect:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'cmd': 'chroom', 'value': 'guest'}, <server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:CALL *('guest', <server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,168:server.Server.change_room:RETURN None
+TRACE:server.py,154:server.Server.parse_client_command:RETURN True
+TRACE:server.py,154:server.Server.parse_client_command:CALL *({'data': '{"nickname": "nagibator228", "msg": "hello", "chat": "guest", "time": "10:50:40", "date": "2019-07-22"}', 'sign': 'FC02BG7CvF6sadz55PeCEOPJhgaytiM3XzaSmNCMFmzu6osuoOrc9WrTGiTRblvLn/8CRCI400yrkFe+M8E+qyRPc0HLGsAJkdvQ1uWf9lKVtFbRE9lHTGI4NmjPjRJ0xwDnf/E+jF9qPXMRIyqNi1YHSgrH/6+3GkGKEqHFhpM=', 'rsa': '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQClRJDPhGFXFrqLBA6pT652LqZ5\nbCKz0pwr0GPunFsEWXhJ4i+jENiIKf03fmpSoStuXdkubevpdIdP1ulLrmCiaOeV\nR/Lu1Jb/ccCi3WxmZEEgwJjtouZTSaWpXDRH+43mb80VA9FoErm9BYIMDm2XhAPx\nngH95hN4pXZKcEaUMwIDAQAB\n-----END PUBLIC KEY-----'}, <server.Connection fd=608, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,154:server.Server.parse_client_command:RETURN False
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,137:server.Server.handler:RETURN None
+TRACE:server.py,179:server.Server.connect:CALL *(<server.Connection fd=632, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,179:server.Server.connect:RETURN None

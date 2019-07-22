@@ -22,5 +22,3 @@ if __name__ == "__main__":
     srv = Server()
     server_thread = Thread(target=srv.run)
     server_thread.start()
-    while True:
-        command = input(">>")

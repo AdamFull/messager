@@ -85,6 +85,9 @@ class SqlInterface:
     def query(self, sql):
         self.cursor.execute(sql)
         self.connection.commit()
+        data = self.cursor.fetchall()
+        if data:
+            return [list(elt) for elt in data]
     
     def close(self):
         if self.connection:

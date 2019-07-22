@@ -5,13 +5,10 @@ import socket
 from threading import Thread
 from autologging import logged, traced
 from server_database import ServerDatabase, ServerSettings, RSACrypt
-from os import system
 
 STATE_READY = 0
 STATE_WORKING = 1
 STATE_STOPPING = 3
-
-system('color')
 
 class Connection(socket.socket):
     def __init__(self, connection:socket.socket, args):
@@ -44,12 +41,11 @@ class Room(object):
             self.users.pop(self.users.index(connection))
     
     def get_users(self):
-        print([user.nickname for user in self.users])
         return {"users": [user.nickname for user in self.users]}
     
     def send(self, data, client:Connection):
         for connection in self.users:
-            if connection != client and client in self.users:
+            if client in self.users:
                 self.protocol.sendws(data, connection.socket)
 
 class Registration:
@@ -164,7 +160,7 @@ class Server(socket.socket):
                     return True
             if data["cmd"] == "rooms":
                 print(self.setting.server_rooms)
-                self.setting.protocol.sendws({"rooms": [room for room in self.setting.server_rooms]}, client_data.socket)
+                self.setting.protocol.sendws({"chats": [room for room in self.setting.server_rooms]}, client_data.socket)
                 return True
         return False
 

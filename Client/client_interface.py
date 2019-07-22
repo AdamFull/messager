@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore, QtMultimedia
 from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
 from ui.server_list import Ui_dialog_layout
@@ -12,31 +12,10 @@ from random import randrange as rr
 # pyuic5 connect_dialog.ui -o connect_dialog.py
 
 class ObserverWorker(QtCore.QObject):
-    message = QtCore.pyqtSignal(object)
-    status = QtCore.pyqtSignal(object)
-    verivication = QtCore.pyqtSignal()
-    server = QtCore.pyqtSignal(object, object)
-    rooms = QtCore.pyqtSignal(object)
-    users = QtCore.pyqtSignal(object)
+    data = QtCore.pyqtSignal(object)
 
-    def recvMessage(self, msg):
-        self.message.emit(msg)
-    
-    def recvStatus(self, msg):
-        self.status.emit(msg)
-    
-    def recvVerif(self):
-        self.verivication.emit()
-    
-    def recvServer(self, msg):
-        self.server.emit(msg, QtCore.Qt.AlignCenter)
-
-    def recvRooms(self, msg):
-        self.rooms.emit(msg)
-    
-    def recvUsers(self, msg):
-        self.users.emit(msg)
-
+    def recvData(self, msg):
+        self.data.emit(msg)
 
 class ConcreteObserver(Observer):
     def __init__(self):
@@ -46,17 +25,7 @@ class ConcreteObserver(Observer):
     def update(self, subject:Subject) -> None:
         c_state = subject._STATE
         c_msg = subject._CURRENT_MESSAGE
-        c_infotype = subject._INFOTYPE
-        if c_infotype == "stat":
-            self.observer_worker.recvStatus(c_msg)
-        elif c_infotype == "msg":
-            self.observer_worker.recvMessage(c_msg)
-        elif c_infotype == "srv":
-            self.observer_worker.recvServer(c_msg)
-        elif c_infotype == "rms":
-            self.observer_worker.recvRooms(c_msg)
-        elif c_infotype == "usrs":
-            self.observer_worker.recvUsers(c_msg)
+        self.observer_worker.recvData(c_msg)
 
         if c_state == 2:
             self.observer_worker.recvVerif()
@@ -156,15 +125,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Backend client
         self.client: Client = Client()
         self.observer: ConcreteObserver = ConcreteObserver()
-        self.observer.observer_worker.status.connect(self.ui.statusbar.showMessage)
-        self.observer.observer_worker.message.connect(self.recvMessage)
-        self.observer.observer_worker.verivication.connect(self.verification_input)
-        self.observer.observer_worker.server.connect(self.recvMessage)
-        self.observer.observer_worker.rooms.connect(self.loadRooms)
-        self.observer.observer_worker.users.connect(self.loadUsers)
+        self.observer.observer_worker.data.connect(self.update)
         self.client.attach(self.observer)
 
         self.thread__ = Thread(target=self.client.run)
+
+        self.current_chat = None
 
         # Menu actions
         self.ui.actionConnect.triggered.connect(self.connect)
@@ -192,23 +158,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recvMessage(msg, QtCore.Qt.AlignRight)
             self.ui.message_box.setText("")
     
-    def changeRoom(self, item):
-        self.ui.chat_list.clear()
-        self.client.server_command({"cmd": "chroom", "value": item.text()})
-
-    def recvMessage(self, msg, align=QtCore.Qt.AlignLeft):
-        item = QtWidgets.QListWidgetItem(msg)
-        item.setTextAlignment(align)
-        self.ui.chat_list.addItem(item)
-        self.ui.chat_list.scrollToItem(item)
-    
-    def loadUsers(self, msg):
-        print(msg)
-
-    def verification_input(self):
-        key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
-        if key and ok:
-            self.client.send_verification_key(str(key))
+    def recvMessage(self, msg, chat, align=QtCore.Qt.AlignLeft):
+        if chat == self.client.current_chat:
+            item = QtWidgets.QListWidgetItem(msg)
+            item.setTextAlignment(align)
+            self.ui.chat_list.addItem(item)
+            self.ui.chat_list.scrollToItem(item)
     
     def loadRooms(self, msg):
         self.ui.room_list.clear()
@@ -220,6 +175,40 @@ class MainWindow(QtWidgets.QMainWindow):
             pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
             item.setIcon(QtGui.QIcon(pixmap))
             self.ui.room_list.addItem(item)
+
+    def update(self, data: dict):
+        keys = data.keys()
+        if "msg" in keys:
+            self.client.setting.database.recv_message(self.client.current_chat, data)
+            self.recvMessage("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
+                            data["chat"],
+                            QtCore.Qt.AlignRight if self.client.setting.nickname == data["nickname"] else QtCore.Qt.AlignLeft)
+            QtMultimedia.QSound("audio/msg.wav").play()
+        elif "info" in keys:
+            print(data["info"])
+        elif "users" in keys:
+            print(data["users"])
+        elif "chats" in keys:
+            self.loadRooms(data["chats"])
+        elif "status" in keys:
+            self.ui.statusbar.showMessage(data["status"])
+        else:
+            print(data)
+    
+    def changeRoom(self, item):
+        self.ui.chat_list.clear()
+        self.client.setting.database.join_to_chat(item.text())
+        self.client.server_command({"cmd": "chroom", "value": item.text()})
+        self.client.current_chat = item.text()
+        messages = self.client.setting.database.load_chat(item.text())
+        if messages:
+            for message in messages:
+                self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]})
+
+    def verification_input(self):
+        key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
+        if key and ok:
+            self.client.send_verification_key(str(key))
             
     def disconnect_(self) -> None:
         if self.client.isLogined:

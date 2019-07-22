@@ -1,3 +1,4 @@
+import sqlite3
 from os import makedirs
 from os.path import dirname, exists, abspath, isfile
 from json import load, dump
@@ -9,117 +10,153 @@ from shutil import rmtree
 #- loads settings from file
 #- saves settings to file
 
-class Response:
-    def __init__(self, recv):
-        self.recv = recv
+sha = lambda x: sha256(x.encode()).hexdigest()
 
-    def response(self):
-        if not self.recv:
-            return "empty_response"
+class SqlInterface:
+    def __init__(self, dbname=None):
+        self.connection = None
+        self.cursor = None
+        if dbname:
+            self.create_database(dbname)
+    
+    def connect(self, dbname):
+        try:
+            self.connection = sqlite3.connect(dbname, check_same_thread=False)
+            self.cursor = self.connection.cursor()
+            return True
+        except sqlite3.Error as e:
+            print('Error to open database.')
+            self.close()
+            return False
+    
+    def create_database(self, dbname):
+        if not self.connect(dbname):
+            self.connect(dbname)
+            self.close()
+            return True
         else:
-            self.recv = self.recv.decode()
-            if self.recv == "verificalion":
-                return "verificalion_response"
+            self.connect(dbname)
+            return False
+    
+    def create_table(self, table_name, table_columns):
+        self.cursor.execute('CREATE TABLE IF NOT EXISTS %s (%s);' % (table_name, table_columns))
+        self.connection.commit()
+    
+    def delete_table(self, table_name):
+        self.cursor.execute('DROP TABLE %s' % table_name)
+        self.connection.commit()
+    
+    def get(self, table_name, columns, limit=None):
+        self.cursor.execute('SELECT %s from %s;' % (columns, table_name))
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
+    
+    def table_list(self):
+        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        data = self.cursor.fetchall()
+        return [elt[0] for elt in data]
 
+    def table_exists(self, table_name):
+        pass
 
-class ClientSetting:
-    def __init__(self, args=None):
+    def fetch_all(self, table_name):
+        self.cursor.execute("SELECT * FROM %s;" % table_name)
+        data = self.cursor.fetchall()
+        return [list(elt) for elt in data]
+
+    def find(self, table_name, parameter, value):
+        query = 'SELECT * FROM %s WHERE "%s" = ?;' % (table_name, parameter)
+        self.cursor.execute(query, [value])
+        data = self.cursor.fetchall()
+        return [list(elt) for elt in data]
+    
+    def insert(self, table_name, columns, data):
+        query_val = "?,"*len(data)
+        query = 'INSERT INTO %s (%s) VALUES (%s);' % (table_name, columns, query_val[:len(query_val)-1])
+        self.cursor.execute(query, data)
+        self.connection.commit()
+    
+    def update(self, table_name, columns, values):
+        cols = columns.replace(" ", "").split(",")
+        query = 'UPDATE %s SET %s WHERE "id" = ?;' % (table_name, ' = ?, '.join(cols) + ' = ?')
+        self.cursor.execute(query, values)
+        self.connection.commit()
+    
+    def delete(self, table_name, id):
+        query = 'DELETE FROM %s WHERE id = ?;' % table_name
+        self.cursor.execute(query, str(id))
+        self.connection.commit()
+    
+    def query(self, sql, args=None):
+        self.cursor.execute(sql, args) if args else self.cursor.execute(sql)
+        self.connection.commit()
+        data = self.cursor.fetchall()
+        if data:
+            return [list(elt) for elt in data]
+    
+    def close(self):
+        if self.connection:
+            self.connection.commit()
+            self.cursor.close()
+            self.connection.close()
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, ex_type, ex_value, traceback):
+        self.close()
+
+class ClientDatabase(SqlInterface):
+    def __init__(self, configuration: list = None):
         self.config_path = dirname(abspath(__file__)) + '/config/'
         self.log_path = dirname(abspath(__file__)) + '/Log/'
-        self.server_public_key = b''
-        self.aes_session_key = b''
-        self.nickname = ''
-        self.password = ''
-        self.server_ip = ''
-        self.port = 9191
+        self.database_path = "%sdatabase.db" % self.config_path
+
+        makedirs(self.config_path) if not exists(self.config_path) else None
+        makedirs(self.log_path) if not exists(self.log_path) else None
+
+        self.create_database(self.database_path)
+        self.create_table("user_settings", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, server_ip TEXT, server_port INTEGER, nickname TEXT, password TEXT, private_key TEXT")
+
+        self.nickname = None
+        self.password = None
+        self.server_ip = None
+        self.server_port = None
         self.protocol = Protocol()
-        
-        if not exists(self.config_path):
-            makedirs(self.config_path)
-        if not exists(self.log_path):
-            makedirs(self.log_path)
-    
-    def generate_rsa(self):
-        self.private_key = RSACrypt().export_private()
-    
-    def load_configurations(self):
-        try:
-            with open('%s/server_list.json' % self.config_path, "r") as file:
-                return load(file)
-        except:
-            return None
-    
-    def set_last(self, configuration):
-        confs = self.load_configurations()
-        for conf in confs.keys():
-            confs[conf] = False
-        confs[configuration] = True
-        with open('%s/server_list.json' % self.config_path, "w") as file:
-            dump(confs, file)
-    
-    def get_last(self):
-        confs = self.load_configurations()
-        if confs:
-            for conf in confs.keys():
-                if confs[conf]:
-                    return conf
-        else:
-            return None
 
-    def add_new_configuration(self):
-        if isfile('%s/server_list.json' % self.config_path):
-            current = self.load_configurations()
-            with open('%s/server_list.json' % self.config_path, "w") as file:
-                new_conf = '%s:%s' % (self.server_ip, self.port)
-                if not new_conf in current.keys():
-                    current.update({new_conf: True})
-                dump(current, file)
-        else:
-            with open('%s/server_list.json' % self.config_path, "w") as file:
-                new_conf = '%s:%s' % (self.server_ip, self.port)
-                dump({new_conf: True}, file)
-        self.set_last(new_conf)
+        self.load(configuration) if configuration else None
 
-    def remove_configuration(self, configuration):
-        current = self.load_configurations()
-        conf = configuration.split(':')
-        config_hash = sha256((conf[0]+conf[1]).encode()).hexdigest()
-        with open('%s/server_list.json' % self.config_path, "w") as file:
-            if configuration in current.keys():
-                rmtree('%s%s/' % (self.config_path, config_hash))
-                current.pop(configuration, None)
-                dump(current, file)
-
-    def load(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
-        with open('%s/%s/profile.json' % (self.config_path, config_hash) , "r") as read_f:
-            data = load(read_f)
-            self.nickname = data["nickname"]
-            self.password = data["password"]
-            self.server_ip = data["ip"]
-            self.port = data["port"]
-    
-    def load_key(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
-        with open('%s/%s/prof_key.pem' % (self.config_path, config_hash), "rb") as pem_file:
-            private_key = AESCrypt(sha256(self.password.encode()).hexdigest()).decrypt(pem_file.read())
+    def load(self, configuration):
+        conf = configuration
+        settings = self.query('SELECT * FROM user_settings WHERE "server_ip" = ? AND "server_port" = ? AND "nickname" = ?;', conf[:len(conf)-1])
+        if settings:
+            settings = settings[0]
+            self.server_ip = settings[1]
+            self.server_port = settings[2]
+            self.nickname = settings[3]
+            self.password = settings[4]
+            private_key = AESCrypt(sha(self.password)).decrypt(settings[5])
             self.protocol.load_rsa(private_key)
-            self.RSA = self.protocol.RSA
+        else:
+            private_key = RSACrypt().export_private()
+            private_key = AESCrypt(sha(conf[3])).encrypt(private_key)
+            conf.append(private_key)
+            self.insert("user_settings", "server_ip, server_port, nickname, password, private_key", conf)
+            self.load(conf[:len(conf)-1])
+    
+    def load_last(self):
+        settings = self.query('SELECT * FROM user_settings WHERE "is_last" = ?', True)
+    
+    def join_to_chat(self, chat_name):
+        self.create_table(chat_name, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, message TEXT, time TEXT, data TEXT")
+    
+    def load_chat(self, chat_name):
+        result = self.query('SELECT * FROM %s' % chat_name)
+        return result
+    
+    def recv_message(self, chat_name, data):
+        self.insert(chat_name, "username, message, time, data", (data["nickname"], data["msg"], data["time"], data["date"]))
 
-    def save_key(self):
-        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
-        if not isfile('%s/%s/prof_key.pem' % (self.config_path, config_hash)):
-            with open('%s/%s/prof_key.pem' % (self.config_path, config_hash), "wb") as pem_file:
-                key = AESCrypt(sha256(self.password.encode()).hexdigest()).encrypt(self.private_key)
-                pem_file.write(key)
-
-    def save(self):
-        self.add_new_configuration()
-        config_hash = sha256((self.server_ip + str(self.port)).encode()).hexdigest()
-        if not exists(self.config_path+config_hash):
-            makedirs(self.config_path+config_hash)
-        with open('%s/%s/profile.json' % (self.config_path, config_hash), "w") as write_f:
-            data = {"nickname" : self.nickname ,"password" : self.password,
-            "ip" : self.server_ip, "port" : self.port}
-            dump(data, write_f)
-            self.save_key()
+if __name__ == "__main__":
+    config =  ["localhost", 9191, "nagibator2281112", "g159753159754H"]
+    database = ClientDatabase(config)

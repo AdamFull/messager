@@ -1,0 +1,14 @@
+TRACE:server.py,127:server.Server.__init__:CALL *() **{}
+TRACE:server.py,127:server.Server.__init__:RETURN None
+TRACE:server.py,192:server.Server.run:CALL *() **{}
+TRACE:server.py,178:server.Server.connect:CALL *(<server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,136:server.Server.handler:CALL *(<server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>,) **{}
+TRACE:server.py,167:server.Server.change_room:CALL *('guest', <server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,153:server.Server.parse_client_command:CALL *({'cmd': 'rooms'}, <server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,167:server.Server.change_room:RETURN None
+TRACE:server.py,178:server.Server.connect:RETURN None
+TRACE:server.py,153:server.Server.parse_client_command:RETURN True
+TRACE:server.py,153:server.Server.parse_client_command:CALL *({'cmd': 'chroom', 'value': 'guest'}, <server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,167:server.Server.change_room:CALL *('guest', <server.Connection fd=564, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0>) **{}
+TRACE:server.py,167:server.Server.change_room:RETURN None
+TRACE:server.py,153:server.Server.parse_client_command:RETURN True
