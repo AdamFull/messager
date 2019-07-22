@@ -13,7 +13,7 @@ STATE_STOPPING = 3
 class Connection(socket.socket):
     def __init__(self, connection:socket.socket, args):
         super(Connection, self).__init__()
-        self.socket: s.socket = connection
+        self.socket: socket.socket = connection
         self.status = ''
         self.connection_status = False
         self.ip: str = args[0]
@@ -71,7 +71,7 @@ class Registration:
         public_key = data[1]
         if self.setting.enable_password:
             self.server_database.add_user_with_verification(username, public_key)
-            if self.verificate(username, self.connection):
+            if self.verificate(username):
                 return True
             else:
                 return False
@@ -155,19 +155,19 @@ class Server(socket.socket):
         keys = data.keys()
         if "cmd" in keys:
             if "value" in keys:
-                if data["cmd"] == "chroom":
-                    self.change_room(data["value"], client_data)
+                if data["cmd"] == "chchat":
+                    self.change_chat(data["value"], client_data)
                     return True
-            if data["cmd"] == "rooms":
+            if data["cmd"] == "chats":
                 print(self.setting.server_rooms)
-                self.setting.protocol.sendws({"chats": [room for room in self.setting.server_rooms]}, client_data.socket)
+                self.setting.protocol.sendws({"chats": [chat for chat in self.setting.server_rooms]}, client_data.socket)
                 return True
         return False
 
-    def change_room(self, room_id, client_data:Connection):
+    def change_chat(self, room_id, client_data:Connection):
         '''This method allows the user to switch between rooms.'''
         if not room_id in self.setting.server_rooms:
-            self.setting.protocol.sendws({"info": "Room %s not found."} % room_id, client_data.socket)
+            self.setting.protocol.sendws({"info": "Chat %s not found."} % room_id, client_data.socket)
             return
         for room in self.rooms:
             room.disconnect(client_data)
@@ -182,7 +182,7 @@ class Server(socket.socket):
             client_data.thread.daemon = True
             client_data.thread.start()
             self.connections.append(client_data)
-            self.change_room("guest", client_data)
+            self.change_chat("guest", client_data)
             print(str(client_data.nickname), "connected", len(self.connections))
         else:
             print('Connection denied.')

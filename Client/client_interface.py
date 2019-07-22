@@ -4,7 +4,6 @@ from ui.connect_dialog import Ui_AddServer
 from ui.server_list import Ui_dialog_layout
 from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
-from client_settings import ClientSetting
 import time
 from random import randrange as rr
 
@@ -28,10 +27,10 @@ class ConcreteObserver(Observer):
         self.observer_worker.recvData(c_msg)
 
         if c_state == 2:
-            self.observer_worker.recvVerif()
+            self.observer_worker.recvData({"verification": None})
         if c_state == 1 and self.need_update:
             self.need_update = False
-            subject.server_command({"cmd": "rooms"})
+            subject.server_command({"cmd": "chats"})
 
 
 class Connect(QtWidgets.QDialog):
@@ -51,68 +50,46 @@ class Connect(QtWidgets.QDialog):
         self.ui.connect_btn.clicked.connect(self.connect)
         self.ui.cancel_btn.clicked.connect(self.close)
         self.ui.new_tab_btn.clicked.connect(self.new_window)
-        self.load()
     
     def new_window(self):
         print("SOON")
         pass
-    
-    def load(self):
-        last_conf = self.client.setting.get_last()
-        if last_conf:
-            self.client.setting.server_ip, self.client.setting.port = last_conf.split(':')
-            self.client.setting.load()
-            self.ui.server_ip.setText(self.client.setting.server_ip)
-            self.ui.server_port.setValue(self.client.setting.port)
-            self.ui.nickname.setText(self.client.setting.nickname)
-            self.ui.password.setText(self.client.setting.password)
-            self.ui.confirm.setText(self.client.setting.password)
 
     def connect(self):
         if self.ui.password.text() == self.ui.confirm.text():
-            self.server_ip = self.ui.server_ip.text()
-            self.port = self.ui.server_port.value()
-            self.nickname = self.ui.nickname.text()
-            self.password = self.ui.password.text()
+            self.data = [self.ui.server_ip.text(), self.ui.server_port.value(), self.ui.nickname.text(), self.ui.password.text()]
             self.accept()
 
 class ServerList(QtWidgets.QDialog):
-    def __init__(self, client, parent=None):
+    def __init__(self, client: Client, parent=None):
         super(ServerList, self).__init__(parent)
         self.ui = Ui_dialog_layout()
         self.ui.setupUi(self)
 
-        self.client = client
+        self.client: Client = client
+        self.configurations = self.client.setting.get_configurations()
+
         self.load_list()
         
         self.ui.connect_btn.clicked.connect(self.load)
         self.ui.remove_btn.clicked.connect(self.remove)
         self.ui.cancel_btn.clicked.connect(self.close)
-
-        self.server_ip = ''
-        self.port = 0000
     
     def load_list(self):
         self.ui.server_list.clear()
-        for srv in self.client.setting.load_configurations().keys():
-            item = QtWidgets.QListWidgetItem(srv)
+        for config in self.configurations:
+            item = QtWidgets.QListWidgetItem('   '.join([str(x) for x in config[1:len(config)-2]]))
+            item.setData(QtCore.Qt.UserRole, config[1:len(config)-1])
             item.setTextAlignment(QtCore.Qt.AlignCenter)
-            pixmap = QtGui.QPixmap(45, 45)
-            pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
-            item.setIcon(QtGui.QIcon(pixmap))
             self.ui.server_list.addItem(item)
 
     def remove(self):
-        c_item = self.ui.server_list.currentItem().text()
-        if c_item:
-            self.client.setting.remove_configuration(c_item)
-            self.load_list()
+        pass
 
     def load(self):
-        c_item = self.ui.server_list.currentItem().text()
+        c_item = self.ui.server_list.currentItem().data(QtCore.Qt.UserRole)
         if c_item:
-            self.server_ip, self.port = c_item.split(':')
-            self.client.setting.set_last(c_item)
+            self.data = c_item
             self.accept()
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -179,7 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update(self, data: dict):
         keys = data.keys()
         if "msg" in keys:
-            self.client.setting.database.recv_message(self.client.current_chat, data)
+            print(self.client.current_chat)
+            self.client.setting.recv_message(self.client.current_chat, data)
             self.recvMessage("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
                             data["chat"],
                             QtCore.Qt.AlignRight if self.client.setting.nickname == data["nickname"] else QtCore.Qt.AlignLeft)
@@ -192,15 +170,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadRooms(data["chats"])
         elif "status" in keys:
             self.ui.statusbar.showMessage(data["status"])
+        elif "verification" in keys:
+            self.verification_input()
         else:
             print(data)
     
     def changeRoom(self, item):
         self.ui.chat_list.clear()
-        self.client.setting.database.join_to_chat(item.text())
-        self.client.server_command({"cmd": "chroom", "value": item.text()})
-        self.client.current_chat = item.text()
-        messages = self.client.setting.database.load_chat(item.text())
+        self.client.change_chat(item.text())
+        messages = self.client.setting.load_chat(item.text())
         if messages:
             for message in messages:
                 self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]})
@@ -218,11 +196,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def server_list(self):
         dialog = ServerList(self.client)
         if dialog.exec_()==QtWidgets.QDialog.Accepted:
-            self.client.setting.server_ip = dialog.server_ip
-            self.client.setting.port = dialog.port
+            self.client.setting.load(dialog.data)
         else:
             return
-        self.client.setting.load()
         self.run_connection()
 
     def run_connection(self):
@@ -232,15 +208,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def connect(self):
         dialog = Connect(self.client)
         if dialog.exec_()==QtWidgets.QDialog.Accepted:
-            self.client.setting.server_ip = dialog.server_ip
-            self.client.setting.port = dialog.port
-            self.client.setting.nickname = dialog.nickname
-            self.client.setting.password = dialog.password
-            self.client.setting.generate_rsa()
-            self.client.setting.save()
+            print(dialog.data)
+            self.client.setting.load(dialog.data)
         else:
             return
-        self.client.setting.load()
         self.run_connection()
     
     def close(self) -> None:

@@ -144,6 +144,9 @@ class ClientDatabase(SqlInterface):
             self.insert("user_settings", "server_ip, server_port, nickname, password, private_key", conf)
             self.load(conf[:len(conf)-1])
     
+    def get_configurations(self):
+        return self.query('SELECT * FROM user_settings;')
+
     def load_last(self):
         settings = self.query('SELECT * FROM user_settings WHERE "is_last" = ?', True)
     

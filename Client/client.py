@@ -18,14 +18,6 @@ class STATEMENT:
         CONNECTED = 1
         VERIFICATION = 2
 
-class INFOTYPE:
-    MESSAGE = "msg"
-    STATUSBAR = "stat"
-    INFO = "srv"
-    ROOMS = "rms"
-    USERS = "usrs"
-    NONE = ""
-
 class Subject(ABC):
     @abstractmethod
     def attach(self, observer) -> None:
@@ -52,7 +44,6 @@ class Observer(ABC):
 class Client(Subject):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _STATE: int = STATEMENT().DISCONNECTED # Current client state
-    _INFOTYPE: INFOTYPE = INFOTYPE().NONE
     _CURRENT_MESSAGE: str = ''             # Current client message
     _observers: List = []                  # Observres list
     def __init__(self, receive_callback=None):
@@ -78,10 +69,8 @@ class Client(Subject):
         for observer in self._observers:
             observer.update(self)
     
-    def change_message(self, msg, itype):
-        self._INFOTYPE = itype
-        self._CURRENT_MESSAGE = msg
-        print(self._CURRENT_MESSAGE, self._INFOTYPE, self._STATE)
+    def change_message(self, data):
+        self._CURRENT_MESSAGE = data
         self.notify()
 
     def listen(self):
@@ -93,11 +82,11 @@ class Client(Subject):
                     if self.rcv_output:
                         self.rcv_output(data)
                     
-                    self.change_message(data, INFOTYPE().MESSAGE)
+                    self.change_message(data)
 
             except socket.error:
                 self._STATE = STATEMENT().DISCONNECTED
-                self.change_message({"status": 'Current connection: none.'}, INFOTYPE().STATUSBAR)
+                self.change_message({"status": 'Current connection: none.'})
                 self.close()
                 break
 
@@ -113,7 +102,7 @@ class Client(Subject):
                 elif "verification" in response_keys:
                     self._STATE = STATEMENT().VERIFICATION
                 elif "key_error" in response_keys:
-                    self.change_message({"status": "Keys don't match"}, INFOTYPE().STATUSBAR)
+                    self.change_message({"status": "Keys don't match"})
                     return False
                 elif "userdata" in response_keys:
                     self.setting.protocol.request({"nickname": self.setting.nickname, "public_key": self.setting.protocol.RSA.export_public().decode()}, self.sock)
@@ -121,9 +110,9 @@ class Client(Subject):
                     return False
             else:
                 if self._STATE == STATEMENT().VERIFICATION:
-                    self.change_message({"status": "Waiting varification key."}, INFOTYPE().STATUSBAR)
+                    self.change_message({"status": "Waiting varification key."})
                 else:
-                    self.change_message({"status": "Waiting server response."}, INFOTYPE().STATUSBAR)
+                    self.change_message({"status": "Waiting server response."})
                 continue
         return False
     
@@ -133,9 +122,9 @@ class Client(Subject):
 
     def connect(self, ip, port, attempts = 5):
         if self._STATE == STATEMENT().CONNECTED:
-            self.change_message({"status": "Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.server_port)}, INFOTYPE().STATUSBAR)
+            self.change_message({"status": "Allready connected to: %s:%s" % (self.setting.server_ip, self.setting.server_port)})
             return False
-        self.change_message({"status": "Trying to connect: %s:%s" % (ip, port)}, INFOTYPE().STATUSBAR)
+        self.change_message({"status": "Trying to connect: %s:%s" % (ip, port)})
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((ip, port))
@@ -144,7 +133,7 @@ class Client(Subject):
                 attempt = attempts-1
                 return self.connect(ip, port, attempt)
             else:
-                self.change_message({"status": 'Connection failed.'}, INFOTYPE().STATUSBAR)
+                self.change_message({"status": 'Connection failed.'})
                 return False
         #self.setting.server_ip = ip
         #self.setting.server_port = port
@@ -152,7 +141,7 @@ class Client(Subject):
         if self.login():
             self.isLogined = True
             self._STATE = STATEMENT().CONNECTED
-            self.change_message({"status": "Current connection: %s:%s" % (ip, port)}, INFOTYPE().STATUSBAR)
+            self.change_message({"status": "Current connection: %s:%s" % (ip, port)})
             self.thread = threading.Thread(target=self.listen)
             self.thread.daemon = True
             self.thread.do_run = True
@@ -162,7 +151,7 @@ class Client(Subject):
             return False
     
     def disconnect(self) -> None:
-        self.change_message({"status": "Disconnecting from server."}, INFOTYPE().STATUSBAR)
+        self.change_message({"status": "Disconnecting from server."})
         self._STATE = STATEMENT().DISCONNECTED
         self.isLogined = False
         self.thread.do_run = False
@@ -174,6 +163,11 @@ class Client(Subject):
     
     def server_command(self, command) -> None:
         self.setting.protocol.send(command, self.sock)
+    
+    def change_chat(self, chat):
+        self.current_chat = chat
+        self.setting.join_to_chat(chat)
+        self.server_command({"cmd": "chroom", "value": chat})
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "chat": self.current_chat, "time": strftime("%H:%M:%S", gmtime()), "date": strftime("%Y-%m-%d", gmtime())}
