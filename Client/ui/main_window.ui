@@ -20,7 +20,7 @@
    <string>Postogramm</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,2">
     <property name="spacing">
      <number>1</number>
     </property>
@@ -37,7 +37,14 @@
      <number>1</number>
     </property>
     <item>
-     <widget class="QListWidget" name="room_list"/>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLineEdit" name="search_t"/>
+      </item>
+      <item>
+       <widget class="QListWidget" name="room_list"/>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QVBoxLayout" name="chat_layout">
