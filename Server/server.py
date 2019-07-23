@@ -158,6 +158,8 @@ class Server(socket.socket):
                 if data["cmd"] == "chchat":
                     self.change_chat(data["value"], client_data)
                     return True
+                if data["cmd"] == "fchat":
+                    print(data["value"])
             if data["cmd"] == "chats":
                 print(self.setting.server_rooms)
                 self.setting.protocol.sendws({"chats": [chat for chat in self.setting.server_rooms]}, client_data.socket)

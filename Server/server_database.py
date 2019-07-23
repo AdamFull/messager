@@ -82,8 +82,8 @@ class SqlInterface:
         self.cursor.execute(query, str(id))
         self.connection.commit()
     
-    def query(self, sql):
-        self.cursor.execute(sql)
+    def query(self, sql, args=None):
+        self.cursor.execute(sql, args) if args else self.cursor.execute(sql)
         self.connection.commit()
         data = self.cursor.fetchall()
         if data:
@@ -112,6 +112,38 @@ class ServerDatabase(SqlInterface):
         self.create_database(self.database_path)
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
+        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, chat TEXT, role TEXT")
+
+    def create_chat(self, chat_name, user):
+        if not chat_name in self.table_list():
+            self.insert("accessories", "username, chat, role", (user, chat_name, "owner"))
+            self.create_table(chat_name, "invite INTEGER, messaging INTEGER, media INTEGER")
+            self.insert(chat_name, "invite, messaging, media", (True, True, True))
+            return True
+        else:
+            return False
+    
+    def remove_chat(self, chat_name):
+        if chat_name in self.table_list():
+            self.delete_table(chat_name)
+            self.query('DELETE * FROM accessories WHERE "chat" = ?;', (chat_name))
+            return True
+        else:
+            return False
+    
+    def join_to_chat(self, chat_name, user):
+        if chat_name in self.table_list():
+            self.insert("accessories", "username, chat, role", (user, chat_name, "user"))
+            return True
+        else:
+            return False
+    
+    def leave_chat(self, chat_name, user):
+        if chat_name in self.table_list():
+            self.query('DELETE FROM accessories WHERE "chat" = ? AND "username" = ?;', (chat_name, user))
+            return True
+        else:
+            return False
 
     def __generate_key(self, length):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
@@ -177,7 +209,7 @@ class ServerSettings:
 
     def save(self):
         self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
-        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "server_password" : self.server_password, "enable_whitelist" : self.enable_whitelist,
+        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "enable_whitelist" : self.enable_whitelist,
                                    "white_list" : self.whitelist, "rooms" : self.server_rooms}
 
         with open(self.config_path, "w") as config_file:

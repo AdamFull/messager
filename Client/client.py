@@ -169,6 +169,9 @@ class Client(Subject):
         self.setting.join_to_chat(chat)
         self.server_command({"cmd": "chroom", "value": chat})
     
+    def find_request(self, data):
+        self.server_command({"cmd": "fchat", "value": data})
+    
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "chat": self.current_chat, "time": strftime("%H:%M:%S", gmtime()), "date": strftime("%Y-%m-%d", gmtime())}
         self.setting.protocol.sendws(msg_data, self.sock)

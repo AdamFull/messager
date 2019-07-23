@@ -121,6 +121,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.room_list.itemDoubleClicked.connect(self.changeRoom)
         # self.ui.message_box.textEdited.connect() #If text edited...
         self.ui.message_box.returnPressed.connect(self.sendMessage)
+        self.ui.search_t.textEdited.connect(self.findChat)
+        self.ui.search_t.setEnabled(False)
 
         # UI defaults
         self.ui.statusbar.showMessage("Disconnected.")
@@ -142,6 +144,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.chat_list.addItem(item)
             self.ui.chat_list.scrollToItem(item)
     
+    def findChat(self):
+        text = self.ui.search_t.text()
+        if self.client.isLogined:
+            if text: 
+                self.client.find_request(text)
+            else:
+                print("Empty")
+    
     def loadRooms(self, msg):
         self.ui.room_list.clear()
         for room in msg:
@@ -154,6 +164,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.room_list.addItem(item)
 
     def update(self, data: dict):
+        self.ui.search_t.setEnabled(True)
         keys = data.keys()
         if "msg" in keys:
             print(self.client.current_chat)
