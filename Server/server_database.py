@@ -126,7 +126,7 @@ class ServerDatabase(SqlInterface):
     def remove_chat(self, chat_name):
         if chat_name in self.table_list():
             self.delete_table(chat_name)
-            self.query('DELETE * FROM accessories WHERE "chat" = ?;', (chat_name))
+            self.query('DELETE * FROM accessories WHERE chat = ?;', (chat_name))
             return True
         else:
             return False
@@ -140,10 +140,25 @@ class ServerDatabase(SqlInterface):
     
     def leave_chat(self, chat_name, user):
         if chat_name in self.table_list():
-            self.query('DELETE FROM accessories WHERE "chat" = ? AND "username" = ?;', (chat_name, user))
+            self.query('DELETE FROM accessories WHERE chat = ? AND username = ?;', (chat_name, user))
             return True
         else:
             return False
+    
+    def get_chats_like(self, query):
+        result = self.query('SELECT chat FROM accessories WHERE chat LIKE ?', query)
+        return set(result) if result else None
+    
+    def get_user_chats(self, user):
+        return self.query('SELECT chat FROM accessories WHERE username = ?', user)
+    
+    def get_chatlist(self):
+        result = self.query('SELECT chat FROM accessories;')
+        return set(result) if result else None
+    
+    def get_users_in_chat(self, chat_name):
+        return self.query('SELECT username FROM accessories WHERE chat = ?;', chat_name)
+
 
     def __generate_key(self, length):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
@@ -195,6 +210,7 @@ class ServerSettings:
         self.whitelist = []
         self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
         self.protocol = Protocol()
+        self.database = ServerDatabase()
 
         if isfile(self.config_path):
             if not isfile("private.pem"):

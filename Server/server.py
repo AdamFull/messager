@@ -60,7 +60,6 @@ class Registration:
             # We are waiting for the code word from the user
             self.setting.protocol.request({"verification": ""}, self.connection.socket)
         else:
-            print('Client lost connection.')
             return False
             
         return True if self.server_database.verificate_user(username, data) else False
@@ -122,7 +121,7 @@ class Registration:
 @traced
 @logged
 class Server(socket.socket):
-    connections = list() # List for contains connections
+    connections = dict() # List for contains connections
 
     def __init__(self):
         super(Server, self).__init__(socket.AF_INET, socket.SOCK_STREAM) # Creating network socket for server
@@ -132,6 +131,8 @@ class Server(socket.socket):
         self.listen(self.setting.maximum_users)  # Listen socket N connections
         self.state = STATE_READY
         self.rooms = [Room(name, self.setting.protocol) for name in self.setting.server_rooms]
+
+        print(self.setting.database.get_chatlist())
 
     def handler(self, client_connection:Connection):
         while self.state == STATE_WORKING and getattr(client_connection.thread, "do_run", True):
@@ -143,11 +144,10 @@ class Server(socket.socket):
                 for room in self.rooms:
                     room.send(data, client_connection)
             except socket.error:
-                print(str(client_connection.nickname), "disconnected", len(self.connections))
                 for room in self.rooms:
                     room.disconnect(client_connection) # disconnect client from rooms
                 client_connection.socket.close() # close client socket
-                self.connections.pop(self.connections.index(client_connection)) # remove client from server
+                self.connections.pop(client_connection.nickname) # remove client from server
                 break
 
     def parse_client_command(self, data, client_data:Connection):
@@ -159,9 +159,10 @@ class Server(socket.socket):
                     self.change_chat(data["value"], client_data)
                     return True
                 if data["cmd"] == "fchat":
-                    print(data["value"])
+                    print(self.setting.database.get_chats_like(data["value"]))
             if data["cmd"] == "chats":
-                print(self.setting.server_rooms)
+                print(client_data.nickname)
+                print(self.setting.database.get_user_chats(client_data.nickname))
                 self.setting.protocol.sendws({"chats": [chat for chat in self.setting.server_rooms]}, client_data.socket)
                 return True
         return False
@@ -183,11 +184,9 @@ class Server(socket.socket):
             client_data.thread = Thread(target=self.handler, args=[client_data])
             client_data.thread.daemon = True
             client_data.thread.start()
-            self.connections.append(client_data)
+            self.connections.update({client_data.nickname: client_data})
             self.change_chat("guest", client_data)
-            print(str(client_data.nickname), "connected", len(self.connections))
         else:
-            print('Connection denied.')
             client_data.socket.close()
 
     # Server startup method
