@@ -217,15 +217,12 @@ class ServerSettings:
         self.maximum_users = 100
         self.enable_password = False
         self.enable_whitelist = False
-        self.whitelist = []
-        self.server_rooms = ['guest' ,'proggers', 'russian', 'pole']
         self.protocol = Protocol()
         self.database = ServerDatabase()
 
         if isfile(self.config_path):
             if not isfile("private.pem"):
-                self.private_key = RSACrypt().export_private()
-                self.save_key()
+                self.save_key(RSACrypt().export_private())
             self.load()
         else:
             self.save()
@@ -235,12 +232,10 @@ class ServerSettings:
 
     def save(self):
         self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
-        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password, "enable_whitelist" : self.enable_whitelist,
-                                   "white_list" : self.whitelist, "rooms" : self.server_rooms}
+        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password}
 
         with open(self.config_path, "w") as config_file:
             self.config.write(config_file)
-        self.save_key()
     
     def getlist(self, string):
         return (''.join(i for i in string if not i in ['[', ']', '\'', ' '])).split(',')
@@ -249,9 +244,9 @@ class ServerSettings:
         with open('private.pem', "rb") as pem_file:
             return AESCrypt(sha256(self.server_ip.encode()).hexdigest()).decrypt(pem_file.read())
 
-    def save_key(self):
+    def save_key(self, private_key):
         with open('private.pem', "wb") as pem_file:
-            key = AESCrypt(sha256(self.server_ip.encode()).hexdigest()).encrypt(self.private_key)
+            key = AESCrypt(sha256(self.server_ip.encode()).hexdigest()).encrypt(private_key)
             pem_file.write(key)
 
     def load(self):
@@ -260,9 +255,6 @@ class ServerSettings:
         self.server_port = self.config["NET"].getint("server_port")
         self.maximum_users = self.config["SETTINGS"].getint("max_slots")
         self.enable_password = self.config["SETTINGS"].getboolean('enable_password')
-        self.enable_whitelist = self.config["SETTINGS"].getboolean('enable_whitelist')
-        self.whitelist = self.getlist(self.config["SETTINGS"].get('white_list'))
-        self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
         private_key = self.load_key()
         self.protocol.load_rsa(private_key)
 

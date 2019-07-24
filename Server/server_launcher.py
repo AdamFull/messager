@@ -27,10 +27,11 @@ if __name__ == "__main__":
     self_usage = Process(getpid())
     while True:
         sleep(1)
-        u_cpu = self_usage.cpu_percent()
+        u_cpu = int(self_usage.cpu_percent())
         u_memory = int(self_usage.memory_info()[0]/2.**20)
         t_memory = int(virtual_memory()[0]/2.**20)
-        o_slots = 0
-        t_slots = 100
-        sys.stdout.write("\rSERVER MONITOR [CPU: %s%% | RAM: %s/%s Mb | SLOTS: %s/%s]" % (u_cpu, u_memory, t_memory, o_slots, t_slots))
+        u_disk = int(self_usage.io_counters()[0]/self_usage.io_counters()[1])
+        o_slots = len(srv.connections.keys())
+        t_slots = srv.setting.maximum_users
+        sys.stdout.write("\rSERVER MONITOR [CPU: %s%% | RAM: %s/%s Mb | DISK: %s%% | SLOTS: %s/%s]" % (u_cpu, u_memory, t_memory, u_disk, o_slots, t_slots))
         sys.stdout.flush()

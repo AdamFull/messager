@@ -11,7 +11,7 @@ from hashlib import sha256
 from client_settings import ClientDatabase
 from abc import ABC, abstractmethod
 from typing import List
-from time import gmtime, strftime
+from time import gmtime, strftime, sleep
 
 class STATEMENT:
         DISCONNECTED = 0
@@ -167,7 +167,12 @@ class Client(Subject):
     def change_chat(self, chat):
         self.current_chat = chat
         self.setting.join_to_chat(chat)
-        self.server_command({"cmd": "chroom", "value": chat})
+        self.server_command({"cmd": "jchat", "value": chat})
+    
+    def create_chat(self, chat):
+        self.server_command({"cmd": "mchat", "value": chat})
+        sleep(1)
+        self.change_chat(chat)
     
     def find_request(self, data):
         self.server_command({"cmd": "fchat", "value": data})

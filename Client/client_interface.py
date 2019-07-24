@@ -118,11 +118,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # UI actions
         self.ui.send_message.clicked.connect(self.sendMessage)
-        self.ui.room_list.itemDoubleClicked.connect(self.changeRoom)
+        self.ui.room_list.itemClicked.connect(self.changeRoom)
         # self.ui.message_box.textEdited.connect() #If text edited...
         self.ui.message_box.returnPressed.connect(self.sendMessage)
         self.ui.search_t.textEdited.connect(self.findChat)
         self.ui.search_t.setEnabled(False)
+        self.ui.open_sb_btn.clicked.connect(self.create_chat)
 
         # UI defaults
         self.ui.statusbar.showMessage("Disconnected.")
@@ -197,6 +198,12 @@ class MainWindow(QtWidgets.QMainWindow):
         key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
         if key and ok:
             self.client.send_verification_key(str(key))
+    
+    def create_chat(self):
+        if self.client.isLogined:
+            key, ok = QtWidgets.QInputDialog.getText(self, 'Change chat name', 'Chat name: ')
+            if key and ok:
+                self.client.create_chat(str(key))
             
     def disconnect_(self) -> None:
         if self.client.isLogined:

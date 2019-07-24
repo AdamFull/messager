@@ -136,8 +136,8 @@ class Server(socket.socket):
         keys = data.keys()
         if "cmd" in keys:
             if "value" in keys:
-                if data["cmd"] == "chchat":
-                    self.change_chat(data["value"], client_data)
+                if data["cmd"] == "jchat":
+                    self.setting.database.join_to_chat(data["value"], client_data.nickname)
                     return True
                 if data["cmd"] == "fchat":
                     if not data["value"]:
@@ -145,6 +145,13 @@ class Server(socket.socket):
                     else:
                         self.setting.protocol.send({"chats": self.setting.database.get_chats_like(data["value"])}, client_data.socket)
                     return True
+                if data["cmd"] == "mchat":
+                    if(self.setting.database.create_chat(data["value"], client_data.nickname)):
+                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
+                        self.setting.protocol.send({"info": "Chat created!"}, client_data.socket)
+                    else:
+                        self.setting.protocol.send({"info": "Error!"}, client_data.socket)
+
             if data["cmd"] == "chats":
                 self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
                 return True
@@ -155,11 +162,6 @@ class Server(socket.socket):
         if not room_id in self.setting.server_rooms:
             self.setting.protocol.send({"info": "Chat %s not found."} % room_id, client_data.socket)
             return
-        for room in self.rooms:
-            room.disconnect(client_data)
-            if room.name == room_id:
-                room.connect(client_data)
-                self.setting.protocol.send({"users": self.setting.database.get_users_in_chat(room_id)}, client_data.socket)
 
     def connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''

@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Messager(object):
     def setupUi(self, Messager):
@@ -21,9 +23,16 @@ class Ui_Messager(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+        self.find_sb_layout = QtWidgets.QHBoxLayout()
+        self.find_sb_layout.setObjectName("find_sb_layout")
+        self.open_sb_btn = QtWidgets.QToolButton(self.centralwidget)
+        self.open_sb_btn.setText("")
+        self.open_sb_btn.setObjectName("open_sb_btn")
+        self.find_sb_layout.addWidget(self.open_sb_btn)
         self.search_t = QtWidgets.QLineEdit(self.centralwidget)
         self.search_t.setObjectName("search_t")
-        self.verticalLayout.addWidget(self.search_t)
+        self.find_sb_layout.addWidget(self.search_t)
+        self.verticalLayout.addLayout(self.find_sb_layout)
         self.room_list = QtWidgets.QListWidget(self.centralwidget)
         self.room_list.setObjectName("room_list")
         self.verticalLayout.addWidget(self.room_list)
@@ -47,7 +56,7 @@ class Ui_Messager(object):
         self.horizontalLayout.setStretch(1, 2)
         Messager.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Messager)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 600, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 600, 30))
         self.menubar.setObjectName("menubar")
         self.menuConnections = QtWidgets.QMenu(self.menubar)
         self.menuConnections.setObjectName("menuConnections")
@@ -102,18 +111,17 @@ class Ui_Messager(object):
         _translate = QtCore.QCoreApplication.translate
         Messager.setWindowTitle(_translate("Messager", "Postogramm"))
         self.send_message.setText(_translate("Messager", "Send"))
-        self.menuConnections.setTitle(_translate("Messager", "Connections"))
-        self.menuSelf.setTitle(_translate("Messager", "Self"))
-        self.menuPermissions.setTitle(_translate("Messager", "Permissions"))
-        self.menuTools.setTitle(_translate("Messager", "Tools"))
-        self.menuHelp.setTitle(_translate("Messager", "Help"))
-        self.actionConnect.setText(_translate("Messager", "Connect"))
-        self.actionDisconnect_from_current.setText(_translate("Messager", "Disconnect from current"))
-        self.actionServer_list.setText(_translate("Messager", "Server list"))
-        self.actionChange_password.setText(_translate("Messager", "Change password"))
-        self.actionChange_nickname.setText(_translate("Messager", "Change nickname"))
-        self.actionChange_username.setText(_translate("Messager", "Change username"))
-        self.actionChange_proxy.setText(_translate("Messager", "Change proxy"))
-        self.actionChange_username_2.setText(_translate("Messager", "Change username"))
+        self.menuConnections.setTitle(_translate("Messager", "&Connections"))
+        self.menuSelf.setTitle(_translate("Messager", "&Self"))
+        self.menuPermissions.setTitle(_translate("Messager", "&Permissions"))
+        self.menuTools.setTitle(_translate("Messager", "&Tools"))
+        self.menuHelp.setTitle(_translate("Messager", "&Help"))
+        self.actionConnect.setText(_translate("Messager", "&Connect"))
+        self.actionDisconnect_from_current.setText(_translate("Messager", "&Disconnect from current"))
+        self.actionServer_list.setText(_translate("Messager", "&Server list"))
+        self.actionChange_password.setText(_translate("Messager", "&Change password"))
+        self.actionChange_nickname.setText(_translate("Messager", "Change &nickname"))
+        self.actionChange_username.setText(_translate("Messager", "Change &username"))
+        self.actionChange_proxy.setText(_translate("Messager", "&Change proxy"))
+        self.actionChange_username_2.setText(_translate("Messager", "Change &username"))
         self.actionDisconnect.setText(_translate("Messager", "Disconnect"))
-
