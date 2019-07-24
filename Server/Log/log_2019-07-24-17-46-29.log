@@ -1,0 +1,11 @@
+TRACE:server.py,126:server.Server.__init__:CALL *() **{}
+TRACE:server.py,126:server.Server.__init__:RETURN None
+TRACE:server.py,204:server.Server.run:CALL *() **{}
+TRACE:server.py,192:server.Server.connect:CALL *(<server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,135:server.Server.handler:CALL *(<server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,192:server.Server.connect:RETURN None
+TRACE:server.py,163:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,163:server.Server.parse_client_command:RETURN True
+TRACE:server.py,163:server.Server.parse_client_command:CALL *({'cmd': 'chroom', 'value': 'server_main'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,163:server.Server.parse_client_command:RETURN False
+TRACE:server.py,152:server.Server.sendToChat:CALL *({'cmd': 'chroom', 'value': 'server_main'},) **{}

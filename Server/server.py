@@ -22,32 +22,6 @@ class Connection(socket.socket):
         self.rsa_public = ''
         self.thread: Thread = None
 
-class Room(object):
-    #List[Connection]
-    def __init__(self, name, protocol):
-        super(Room, self).__init__()
-        self.name = name
-        self.users = list()
-        self.protocol = protocol
-    
-    def connect(self, connection:Connection) -> None:
-        if not connection in self.users:
-            self.users.append(connection)
-            self.send({"info": "%s connected to chat." % connection.nickname}, connection)
-    
-    def disconnect(self, connection:Connection) -> None:
-        if connection in self.users:
-            self.send({"info": "%s left the chat." % connection.nickname}, connection)
-            self.users.pop(self.users.index(connection))
-    
-    def get_users(self):
-        return {"users": [user.nickname for user in self.users]}
-    
-    def send(self, data, client:Connection):
-        for connection in self.users:
-            if client in self.users:
-                self.protocol.sendws(data, connection.socket)
-
 class Registration:
     def __init__(self, connection:Connection, setting:ServerSettings):
         self.server_database = ServerDatabase()
@@ -130,25 +104,32 @@ class Server(socket.socket):
         self.bind((self.setting.server_ip, self.setting.server_port))  # Configure server socket
         self.listen(self.setting.maximum_users)  # Listen socket N connections
         self.state = STATE_READY
-        self.rooms = [Room(name, self.setting.protocol) for name in self.setting.server_rooms]
-
-        print(self.setting.database.get_chatlist())
 
     def handler(self, client_connection:Connection):
         while self.state == STATE_WORKING and getattr(client_connection.thread, "do_run", True):
             try:
                 data = self.setting.protocol.recv(client_connection.socket)  # Reading client
-            
-                if(self.parse_client_command(data, client_connection)):
-                    continue
-                for room in self.rooms:
-                    room.send(data, client_connection)
+                if data:
+                    if(self.parse_client_command(data, client_connection)):
+                        continue
+                    self.sendToChat(data)
+                else:
+                    raise socket.error
             except socket.error:
-                for room in self.rooms:
-                    room.disconnect(client_connection) # disconnect client from rooms
                 client_connection.socket.close() # close client socket
                 self.connections.pop(client_connection.nickname) # remove client from server
                 break
+    
+    def sendToChat(self, data):
+        if "msg" in data.keys():
+            chat_usrs = self.setting.database.get_users_in_chat(data["chat"])
+            offline = []
+            for usr in chat_usrs:
+                try:
+                    self.setting.protocol.send(data, self.connections[usr].socket)
+                except KeyError:
+                    offline.append(usr) if not usr == "server" else None
+
 
     def parse_client_command(self, data, client_data:Connection):
         '''This method is responsible for processing commands from the client.'''
@@ -159,24 +140,26 @@ class Server(socket.socket):
                     self.change_chat(data["value"], client_data)
                     return True
                 if data["cmd"] == "fchat":
-                    print(self.setting.database.get_chats_like(data["value"]))
+                    if not data["value"]:
+                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
+                    else:
+                        self.setting.protocol.send({"chats": self.setting.database.get_chats_like(data["value"])}, client_data.socket)
+                    return True
             if data["cmd"] == "chats":
-                print(client_data.nickname)
-                print(self.setting.database.get_user_chats(client_data.nickname))
-                self.setting.protocol.sendws({"chats": [chat for chat in self.setting.server_rooms]}, client_data.socket)
+                self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
                 return True
         return False
 
     def change_chat(self, room_id, client_data:Connection):
         '''This method allows the user to switch between rooms.'''
         if not room_id in self.setting.server_rooms:
-            self.setting.protocol.sendws({"info": "Chat %s not found."} % room_id, client_data.socket)
+            self.setting.protocol.send({"info": "Chat %s not found."} % room_id, client_data.socket)
             return
         for room in self.rooms:
             room.disconnect(client_data)
             if room.name == room_id:
                 room.connect(client_data)
-                self.setting.protocol.sendws({"users": room.get_users()}, client_data.socket)
+                self.setting.protocol.send({"users": self.setting.database.get_users_in_chat(room_id)}, client_data.socket)
 
     def connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
@@ -185,7 +168,7 @@ class Server(socket.socket):
             client_data.thread.daemon = True
             client_data.thread.start()
             self.connections.update({client_data.nickname: client_data})
-            self.change_chat("guest", client_data)
+            self.setting.database.join_to_chat("server_main", client_data.nickname)
         else:
             client_data.socket.close()
 

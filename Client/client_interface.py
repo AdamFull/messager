@@ -132,7 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def sendMessage(self):
         msg = self.ui.message_box.text()
-        if msg and self.client.isLogined:
+        if msg and self.client.isLogined and self.client.current_chat:
             self.client.send(msg)
             self.recvMessage(msg, QtCore.Qt.AlignRight)
             self.ui.message_box.setText("")
@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if text: 
                 self.client.find_request(text)
             else:
-                print("Empty")
+                self.client.find_request(None)
     
     def loadRooms(self, msg):
         self.ui.room_list.clear()
@@ -163,16 +163,15 @@ class MainWindow(QtWidgets.QMainWindow):
             item.setIcon(QtGui.QIcon(pixmap))
             self.ui.room_list.addItem(item)
 
-    def update(self, data: dict):
+    def update(self, data: dict, loading=False):
         self.ui.search_t.setEnabled(True)
         keys = data.keys()
         if "msg" in keys:
-            print(self.client.current_chat)
             self.client.setting.recv_message(self.client.current_chat, data)
             self.recvMessage("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
                             data["chat"],
                             QtCore.Qt.AlignRight if self.client.setting.nickname == data["nickname"] else QtCore.Qt.AlignLeft)
-            QtMultimedia.QSound("audio/msg.wav").play()
+            QtMultimedia.QSound("/audio/msg.wav").play() if not loading else None
         elif "info" in keys:
             print(data["info"])
         elif "users" in keys:
@@ -192,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
         messages = self.client.setting.load_chat(item.text())
         if messages:
             for message in messages:
-                self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]})
+                self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]}, True)
 
     def verification_input(self):
         key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')

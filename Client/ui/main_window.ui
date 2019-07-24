@@ -39,7 +39,18 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QLineEdit" name="search_t"/>
+       <layout class="QHBoxLayout" name="find_sb_layout">
+        <item>
+         <widget class="QToolButton" name="open_sb_btn">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit"/>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QListWidget" name="room_list"/>
@@ -78,12 +89,12 @@
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>21</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuConnections">
     <property name="title">
-     <string>Connections</string>
+     <string>&amp;Connections</string>
     </property>
     <addaction name="actionConnect"/>
     <addaction name="actionDisconnect_from_current"/>
@@ -91,7 +102,7 @@
    </widget>
    <widget class="QMenu" name="menuSelf">
     <property name="title">
-     <string>Self</string>
+     <string>&amp;Self</string>
     </property>
     <addaction name="actionChange_password"/>
     <addaction name="actionChange_nickname"/>
@@ -99,19 +110,19 @@
    </widget>
    <widget class="QMenu" name="menuPermissions">
     <property name="title">
-     <string>Permissions</string>
+     <string>&amp;Permissions</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>Tools</string>
+     <string>&amp;Tools</string>
     </property>
     <addaction name="actionChange_proxy"/>
     <addaction name="actionChange_username_2"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
    </widget>
    <addaction name="menuConnections"/>
@@ -123,42 +134,42 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionConnect">
    <property name="text">
-    <string>Connect</string>
+    <string>&amp;Connect</string>
    </property>
   </action>
   <action name="actionDisconnect_from_current">
    <property name="text">
-    <string>Disconnect from current</string>
+    <string>&amp;Disconnect from current</string>
    </property>
   </action>
   <action name="actionServer_list">
    <property name="text">
-    <string>Server list</string>
+    <string>&amp;Server list</string>
    </property>
   </action>
   <action name="actionChange_password">
    <property name="text">
-    <string>Change password</string>
+    <string>&amp;Change password</string>
    </property>
   </action>
   <action name="actionChange_nickname">
    <property name="text">
-    <string>Change nickname</string>
+    <string>Change &amp;nickname</string>
    </property>
   </action>
   <action name="actionChange_username">
    <property name="text">
-    <string>Change username</string>
+    <string>Change &amp;username</string>
    </property>
   </action>
   <action name="actionChange_proxy">
    <property name="text">
-    <string>Change proxy</string>
+    <string>&amp;Change proxy</string>
    </property>
   </action>
   <action name="actionChange_username_2">
    <property name="text">
-    <string>Change username</string>
+    <string>Change &amp;username</string>
    </property>
   </action>
   <action name="actionDisconnect">

@@ -1,11 +1,16 @@
 import sqlite3
-from os import path, makedirs
+from os import makedirs
 from configparser import ConfigParser
-from os.path import isfile, exists
+from os.path import isfile, exists, dirname, abspath
 from hashlib import sha256
 from random import choice
 from string import ascii_letters, punctuation, digits
 from protocol import Protocol, AESCrypt, RSACrypt
+from threading import Lock
+
+normalize = lambda arr: list(dict.fromkeys([item for sublist in arr for item in sublist]))
+
+lock = Lock()
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -83,9 +88,11 @@ class SqlInterface:
         self.connection.commit()
     
     def query(self, sql, args=None):
+        lock.acquire(True)
         self.cursor.execute(sql, args) if args else self.cursor.execute(sql)
         self.connection.commit()
         data = self.cursor.fetchall()
+        lock.release()
         if data:
             return [list(elt) for elt in data]
     
@@ -103,8 +110,9 @@ class SqlInterface:
 
 class ServerDatabase(SqlInterface):
     def __init__(self):
-        self.data_path = 'Data/'
+        self.data_path = dirname(abspath(__file__)) + '/Data/'
         self.database_path = self.data_path + "server_database.db"
+        self.lock = Lock()
 
         if not exists(self.data_path):
             makedirs(self.data_path)
@@ -113,6 +121,7 @@ class ServerDatabase(SqlInterface):
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
         self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, chat TEXT, role TEXT")
+        self.create_chat("server_main", "server")
 
     def create_chat(self, chat_name, user):
         if not chat_name in self.table_list():
@@ -126,38 +135,39 @@ class ServerDatabase(SqlInterface):
     def remove_chat(self, chat_name):
         if chat_name in self.table_list():
             self.delete_table(chat_name)
-            self.query('DELETE * FROM accessories WHERE chat = ?;', (chat_name))
+            self.query('DELETE * FROM accessories WHERE chat = ?;', (chat_name,))
             return True
         else:
             return False
     
     def join_to_chat(self, chat_name, user):
-        if chat_name in self.table_list():
+        query = normalize(self.query('SELECT username FROM accessories WHERE chat = ?', (chat_name,)))
+        if not user in query:
             self.insert("accessories", "username, chat, role", (user, chat_name, "user"))
             return True
         else:
             return False
     
     def leave_chat(self, chat_name, user):
-        if chat_name in self.table_list():
-            self.query('DELETE FROM accessories WHERE chat = ? AND username = ?;', (chat_name, user))
-            return True
-        else:
-            return False
+        self.query('DELETE FROM accessories WHERE chat = ? AND username = ?;', (chat_name, user))
+        return True
     
     def get_chats_like(self, query):
-        result = self.query('SELECT chat FROM accessories WHERE chat LIKE ?', query)
-        return set(result) if result else None
+        result = self.query('SELECT chat FROM accessories WHERE chat LIKE ?;', ('%'+query+'%',))
+        return normalize(result) if result else None
     
     def get_user_chats(self, user):
-        return self.query('SELECT chat FROM accessories WHERE username = ?', user)
+        return normalize(self.query('SELECT chat FROM accessories WHERE username = ?', (user,)))
     
     def get_chatlist(self):
         result = self.query('SELECT chat FROM accessories;')
-        return set(result) if result else None
+        return normalize(result) if result else None
     
     def get_users_in_chat(self, chat_name):
-        return self.query('SELECT username FROM accessories WHERE chat = ?;', chat_name)
+        return normalize(self.query('SELECT username FROM accessories WHERE chat = ?;', (chat_name,)))
+    
+    def get_all_users(self):
+        return normalize(self.query('SELECT username FROM accessories;'))
 
 
     def __generate_key(self, length):
@@ -255,3 +265,7 @@ class ServerSettings:
         self.server_rooms = self.getlist(self.config["SETTINGS"].get('rooms'))
         private_key = self.load_key()
         self.protocol.load_rsa(private_key)
+
+if __name__ == "__main__":
+    db = ServerDatabase()
+    print(db.join_to_chat("server_main", "test"))

@@ -151,14 +151,14 @@ class ClientDatabase(SqlInterface):
         settings = self.query('SELECT * FROM user_settings WHERE "is_last" = ?', True)
     
     def join_to_chat(self, chat_name):
-        self.create_table(chat_name, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, message TEXT, time TEXT, data TEXT")
+        self.create_table(chat_name, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, message TEXT, chat TEXT, time TEXT, data TEXT")
     
     def load_chat(self, chat_name):
         result = self.query('SELECT * FROM %s' % chat_name)
         return result
     
     def recv_message(self, chat_name, data):
-        self.insert(chat_name, "username, message, time, data", (data["nickname"], data["msg"], data["time"], data["date"]))
+        self.insert(chat_name, "username, message, chat, time, data", (data["nickname"], data["msg"], data["chat"], data["time"], data["date"]))
 
 if __name__ == "__main__":
     config =  ["localhost", 9191, "nagibator2281112", "g159753159754H"]

@@ -77,7 +77,7 @@ class Client(Subject):
         current_thread = threading.current_thread()
         while getattr(current_thread, "do_run", True):
             try:
-                data = self.setting.protocol.recvwv(self.sock)
+                data = self.setting.protocol.recv(self.sock)
                 if data:
                     if self.rcv_output:
                         self.rcv_output(data)
@@ -174,7 +174,7 @@ class Client(Subject):
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "chat": self.current_chat, "time": strftime("%H:%M:%S", gmtime()), "date": strftime("%Y-%m-%d", gmtime())}
-        self.setting.protocol.sendws(msg_data, self.sock)
+        self.setting.protocol.send(msg_data, self.sock)
     
     def close(self):
         self.sock.detach()
