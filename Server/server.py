@@ -128,7 +128,7 @@ class Server(socket.socket):
                 try:
                     self.setting.protocol.send(data, self.connections[usr].socket)
                 except KeyError:
-                    offline.append(usr) if not usr == "server" else None
+                    self.setting.database.add_to_queue(data, usr)
 
 
     def parse_client_command(self, data, client_data:Connection):
@@ -156,12 +156,12 @@ class Server(socket.socket):
                 self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
                 return True
         return False
-
-    def change_chat(self, room_id, client_data:Connection):
-        '''This method allows the user to switch between rooms.'''
-        if not room_id in self.setting.server_rooms:
-            self.setting.protocol.send({"info": "Chat %s not found."} % room_id, client_data.socket)
-            return
+    
+    def send_qeued(self, client_data: Connection):
+        messages = self.setting.database.get_user_queue(client_data.nickname)
+        for message in messages:
+            self.sendToChat(message)
+        self.setting.database.remove_from_queue(client_data.nickname)
 
     def connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
@@ -171,6 +171,8 @@ class Server(socket.socket):
             client_data.thread.start()
             self.connections.update({client_data.nickname: client_data})
             self.setting.database.join_to_chat("server_main", client_data.nickname)
+            if client_data.nickname in self.setting.database.get_queue():
+                self.send_qeued(client_data)
         else:
             client_data.socket.close()
 

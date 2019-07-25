@@ -121,6 +121,7 @@ class ServerDatabase(SqlInterface):
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
         self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, chat TEXT, role TEXT")
+        self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, username TEXT")
         self.create_chat("server_main", "server")
 
     def create_chat(self, chat_name, user):
@@ -168,6 +169,18 @@ class ServerDatabase(SqlInterface):
     
     def get_all_users(self):
         return normalize(self.query('SELECT username FROM accessories;'))
+    
+    def add_to_queue(self, data, user):
+        self.insert("queue", "data, username", (data, user))
+    
+    def remove_from_queue(self, user):
+        self.query('DELETE * FROM queue WHERE username = ?;', (user,))
+    
+    def get_user_queue(self, user):
+        return normalize(self.query('SELECT data FROM queue WHERE username = ?;'))
+    
+    def get_queue(self):
+        return normalize(self.query('SELECT username FROM queue;'))
 
 
     def __generate_key(self, length):

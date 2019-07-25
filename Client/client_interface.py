@@ -10,6 +10,8 @@ from random import randrange as rr
 # pyuic5 main_window.ui -o main_window.py
 # pyuic5 connect_dialog.ui -o connect_dialog.py
 
+__version__ = [0, 4, 1, "alpha", "release"]
+
 class ObserverWorker(QtCore.QObject):
     data = QtCore.pyqtSignal(object)
 
@@ -168,11 +170,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.search_t.setEnabled(True)
         keys = data.keys()
         if "msg" in keys:
-            self.client.setting.recv_message(self.client.current_chat, data)
+            if not loading:
+                self.client.setting.recv_message(data["chat"], data)
+                QtMultimedia.QSound("/audio/msg.wav").play()
             self.recvMessage("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
                             data["chat"],
                             QtCore.Qt.AlignRight if self.client.setting.nickname == data["nickname"] else QtCore.Qt.AlignLeft)
-            QtMultimedia.QSound("/audio/msg.wav").play() if not loading else None
         elif "info" in keys:
             print(data["info"])
         elif "users" in keys:
