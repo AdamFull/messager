@@ -125,6 +125,7 @@ class ServerDatabase(SqlInterface):
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, invite_hash TEXT")
         self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, chat TEXT, role TEXT")
         self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, user_uid TEXT")
+        self.create_table("related_users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, friend TEXT")
         self.create_chat("server_main", "server")
 
     def create_chat(self, chat_name, user_uid):

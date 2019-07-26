@@ -194,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.chat_list.clear()
         self.client.change_chat(item.text())
         messages = self.client.setting.load_chat(item.text())
+        print(item.data(QtCore.Qt.UserRole))
         if messages:
             for message in messages:
                 self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]}, True)
