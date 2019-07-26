@@ -6,6 +6,7 @@ from threading import Thread
 from client import Client, STATEMENT, Observer, Subject
 import time
 from random import randrange as rr
+from json import loads
 
 # pyuic5 main_window.ui -o main_window.py
 # pyuic5 connect_dialog.ui -o connect_dialog.py
@@ -153,10 +154,12 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.client.find_request(None)
     
-    def loadRooms(self, msg):
+    def loadRooms(self, data):
         self.ui.room_list.clear()
-        for room in msg:
-            item = QtWidgets.QListWidgetItem(room)
+        chats = data.keys()
+        for chat in chats:
+            item = QtWidgets.QListWidgetItem(chat)
+            item.setData(QtCore.Qt.UserRole, data[chat])
             item.setSizeHint(QtCore.QSize(0, 50))
             item.setTextAlignment(QtCore.Qt.AlignLeft)
             pixmap = QtGui.QPixmap(45, 45)

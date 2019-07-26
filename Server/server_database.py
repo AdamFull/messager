@@ -146,13 +146,17 @@ class ServerDatabase(SqlInterface):
         else:
             return False
     
-    def update_chat_s(self, chat_name, args):
+    def update_chat_settings(self, chat_name, args):
         chat_name = get_cn(chat_name, b'server')
         if chat_name in self.table_list():
             self.update(chat_name, "send_messages, send_media, send_s_a_g, send_polls, embed_links, add_users, pin_messages, change_chat_info", args + [1])
             return True
         else:
             return False
+    
+    def get_chat_settings(self, chat_name):
+        chat_name = get_cn(chat_name, b'server')
+        return self.query('SELECT * FROM %s;' % (chat_name,))[0]
     
     def join_to_chat(self, chat_name, user):
         query = normalize(self.query('SELECT user_uid FROM accessories WHERE chat = ?', (chat_name,)))
@@ -290,4 +294,5 @@ class ServerSettings:
 
 if __name__ == "__main__":
     db = ServerDatabase()
-    print(db.join_to_chat("server_main", "test"))
+    print({data: db.get_chat_settings(data) for data in db.get_user_chats("7aaea446b8ca0712a52c8db346dab5f8399b429c1d560cdfa725ebb2726096b1")})
+    print(db.get_chat_settings("server_main"))

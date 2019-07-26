@@ -159,7 +159,9 @@ class Server(socket.socket):
                         self.setting.protocol.send({"info": "Error!"}, client_data.socket)
 
             if data["cmd"] == "chats":
-                self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
+                g_c_s = lambda x: self.setting.database.get_chat_settings(x)
+                g_u_c = lambda x: self.setting.database.get_user_chats(x)
+                self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
                 return True
             if data["cmd"] == "disconnect":
                 self.setting.protocol.send({"info": "Nu i vali otsuda koresh."}, client_data.socket)
