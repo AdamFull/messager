@@ -63,7 +63,7 @@ class Registration:
             if "wanna_connect" in data.keys():
                 self.setting.protocol.request({"userdata": ""}, self.connection.socket)
                 data = self.setting.protocol.response(self.connection.socket)
-                username, user_uid, public_key = data["nickname"], sha_hd(data["public_key"]), data["puclic_key"]
+                username, user_uid, public_key = data["nickname"], sha_hd(data["public_key"]), data["public_key"]
         else:
             username, user_uid, public_key = data[0], data[1], data[2]
         
@@ -120,7 +120,7 @@ class Server(socket.socket):
                     raise socket.error
             except socket.error:
                 client_connection.socket.close() # close client socket
-                self.connections.pop(client_connection.nickname) # remove client from server
+                self.connections.pop(client_connection.user_uid) # remove client from server
                 break
     
     def send_to_chat(self, data):
@@ -143,33 +143,33 @@ class Server(socket.socket):
         if "cmd" in keys:
             if "value" in keys:
                 if data["cmd"] == "jchat":
-                    self.setting.database.join_to_chat(data["value"], client_data.nickname)
+                    self.setting.database.join_to_chat(data["value"], client_data.user_uid)
                     return True
                 if data["cmd"] == "fchat":
                     if not data["value"]:
-                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
+                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
                     else:
                         self.setting.protocol.send({"chats": self.setting.database.get_chats_like(data["value"])}, client_data.socket)
                     return True
                 if data["cmd"] == "mchat":
-                    if(self.setting.database.create_chat(data["value"], client_data.nickname)):
-                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
+                    if(self.setting.database.create_chat(data["value"], client_data.user_uid)):
+                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
                         self.setting.protocol.send({"info": "Chat created!"}, client_data.socket)
                     else:
                         self.setting.protocol.send({"info": "Error!"}, client_data.socket)
 
             if data["cmd"] == "chats":
-                self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
+                self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
                 return True
             if data["cmd"] == "disconnect":
                 self.setting.protocol.send({"info": "Nu i vali otsuda koresh."}, client_data.socket)
         return False
     
     def send_qeued(self, client_data: Connection):
-        messages = self.setting.database.get_user_queue(client_data.nickname)
+        messages = self.setting.database.get_user_queue(client_data.user_uid)
         for message in messages:
-            self.send_for(loads(message), client_data.nickname)
-        self.setting.database.remove_from_queue(client_data.nickname)
+            self.send_for(loads(message), client_data.user_uid)
+        self.setting.database.remove_from_queue(client_data.user_uid)
 
     def connect(self, client_data:Connection):
         '''This method either terminates the connection or passes the user to the server if the authorization was successful.'''
@@ -181,7 +181,7 @@ class Server(socket.socket):
             self.setting.database.join_to_chat("server_main", client_data.user_uid)
             queue = self.setting.database.get_queue()
             if queue:
-                if client_data.nickname in queue:
+                if client_data.user_uid in queue:
                     self.send_qeued(client_data)
         else:
             client_data.socket.close()

@@ -203,16 +203,16 @@ class ServerDatabase(SqlInterface):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
 
     def is_user_already_exist(self, user_uid):
-        return True if len(self.find("users", "user_uid", user_uid)) > 0 else False
+        return len(self.find("users", "user_uid", user_uid)) > 0
     
     def is_user_verificated(self, user_uid):
-        return True if self.find("users", "user_uid", user_uid)[0][3] == 1 else False
+        return self.find("users", "user_uid", user_uid)[0][4] == 1
     
     def is_keys_match(self, user_uid, public_key):
-        return True if public_key in self.find("users", "user_uid", user_uid)[0] else False
+        return public_key in self.find("users", "user_uid", user_uid)[0]
         
     def is_invite_hash_match(self, user_uid, invite_hash):
-        return True if self.find("invite_keys", "user_uid", user_uid)[0][2] == invite_hash else False
+        return self.find("invite_keys", "user_uid", user_uid)[0][2] == invite_hash
     
     def get_user_id(self, table_name, user_uid):
         return self.find(table_name, "user_uid", user_uid)[0][0]
@@ -243,9 +243,9 @@ class ServerSettings:
         self.config_path = 'config.ini'
         self.server_ip = '0.0.0.0'
         self.server_port = 9191
+        self.server_name = 'ptg server'
         self.maximum_users = 100
         self.enable_password = False
-        self.enable_whitelist = False
         self.protocol = Protocol()
         self.database = ServerDatabase()
 
@@ -261,7 +261,7 @@ class ServerSettings:
 
     def save(self):
         self.config["NET"] = {"server_ip" : self.server_ip, "server_port" : self.server_port}
-        self.config["SETTINGS"] = {"max_slots" : self.maximum_users, "enable_password" : self.enable_password}
+        self.config["SETTINGS"] = {"server_name": self.server_name, "max_slots" : self.maximum_users, "enable_password" : self.enable_password}
 
         with open(self.config_path, "w") as config_file:
             self.config.write(config_file)
@@ -282,6 +282,7 @@ class ServerSettings:
         self.config.read(self.config_path)
         self.server_ip = self.config["NET"].get("server_ip")
         self.server_port = self.config["NET"].getint("server_port")
+        self.server_name = self.config["SETTINGS"].get("server_name")
         self.maximum_users = self.config["SETTINGS"].getint("max_slots")
         self.enable_password = self.config["SETTINGS"].getboolean('enable_password')
         private_key = self.load_key()
