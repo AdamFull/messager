@@ -9,8 +9,12 @@ from protocol import Protocol, AESCrypt, RSACrypt
 from threading import Lock
 
 normalize = lambda arr: list(dict.fromkeys([item for sublist in arr for item in sublist]))
+sha_hd = lambda x: sha256(x.encode()).hexdigest()
+sha_d = lambda x: sha256(x.encode()).digest()
+get_cn = lambda x, y: "chat%s" % sha256(x.encode() + y).hexdigest()
 
 lock = Lock()
+
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -112,111 +116,123 @@ class ServerDatabase(SqlInterface):
     def __init__(self):
         self.data_path = dirname(abspath(__file__)) + '/Data/'
         self.database_path = self.data_path + "server_database.db"
-        self.lock = Lock()
 
         if not exists(self.data_path):
             makedirs(self.data_path)
 
         self.create_database(self.database_path)
-        self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
-        self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, invite_hash TEXT")
-        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, chat TEXT, role TEXT")
-        self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, username TEXT")
+        self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
+        self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, invite_hash TEXT")
+        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, chat TEXT, role TEXT")
+        self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, user_uid TEXT")
         self.create_chat("server_main", "server")
 
-    def create_chat(self, chat_name, user):
-        if not chat_name in self.table_list():
-            self.insert("accessories", "username, chat, role", (user, chat_name, "owner"))
-            self.create_table(chat_name, "invite INTEGER, messaging INTEGER, media INTEGER")
-            self.insert(chat_name, "invite, messaging, media", (True, True, True))
+    def create_chat(self, chat_name, user_uid):
+        table = get_cn(chat_name, b'server')
+        if not table in self.table_list():
+            self.insert("accessories", "user_uid, chat, role", (user_uid, chat_name, "owner"))
+            self.create_table(table, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, send_messages INTEGER, send_media INTEGER, send_s_a_g INTEGER, send_polls INTEGER, embed_links INTEGER, add_users INTEGER, pin_messages INTEGER, change_chat_info INTEGER")
+            self.insert(table, "send_messages, send_media, send_s_a_g, send_polls, embed_links, add_users, pin_messages, change_chat_info", (True, True, True, True, True, True, True, True))
             return True
         else:
             return False
     
     def remove_chat(self, chat_name):
+        table = get_cn(chat_name, b'server')
+        if table in self.table_list():
+            self.delete_table(table)
+            self.query('DELETE FROM accessories WHERE chat = ?;', (chat_name,))
+            return True
+        else:
+            return False
+    
+    def update_chat_s(self, chat_name, args):
+        chat_name = get_cn(chat_name, b'server')
         if chat_name in self.table_list():
-            self.delete_table(chat_name)
-            self.query('DELETE * FROM accessories WHERE chat = ?;', (chat_name,))
+            self.update(chat_name, "send_messages, send_media, send_s_a_g, send_polls, embed_links, add_users, pin_messages, change_chat_info", args + [1])
             return True
         else:
             return False
     
     def join_to_chat(self, chat_name, user):
-        query = normalize(self.query('SELECT username FROM accessories WHERE chat = ?', (chat_name,)))
+        query = normalize(self.query('SELECT user_uid FROM accessories WHERE chat = ?', (chat_name,)))
         if not user in query:
-            self.insert("accessories", "username, chat, role", (user, chat_name, "user"))
+            self.insert("accessories", "user_uid, chat, role", (user, chat_name, "user"))
             return True
         else:
             return False
     
-    def leave_chat(self, chat_name, user):
-        self.query('DELETE FROM accessories WHERE chat = ? AND username = ?;', (chat_name, user))
+    def leave_chat(self, chat_name, user_uid):
+        self.query('DELETE FROM accessories WHERE chat = ? AND user_uid = ?;', (chat_name, user_uid))
         return True
     
     def get_chats_like(self, query):
         result = self.query('SELECT chat FROM accessories WHERE chat LIKE ?;', ('%'+query+'%',))
         return normalize(result) if result else None
     
-    def get_user_chats(self, user):
-        return normalize(self.query('SELECT chat FROM accessories WHERE username = ?', (user,)))
+    def get_user_chats(self, user_uid):
+        return normalize(self.query('SELECT chat FROM accessories WHERE user_uid = ?', (user_uid,)))
     
     def get_chatlist(self):
         result = self.query('SELECT chat FROM accessories;')
         return normalize(result) if result else None
     
     def get_users_in_chat(self, chat_name):
-        return normalize(self.query('SELECT username FROM accessories WHERE chat = ?;', (chat_name,)))
+        return normalize(self.query('SELECT user_uid FROM accessories WHERE chat = ?;', (chat_name,)))
     
     def get_all_users(self):
-        return normalize(self.query('SELECT username FROM accessories;'))
+        query = self.query('SELECT user_uid FROM accessories;')
+        return normalize(query) if query else None
     
-    def add_to_queue(self, data, user):
-        self.insert("queue", "data, username", (data, user))
+    def add_to_queue(self, data, user_uid):
+        self.insert("queue", "data, user_uid", (data, user_uid))
     
-    def remove_from_queue(self, user):
-        self.query('DELETE * FROM queue WHERE username = ?;', (user,))
+    def remove_from_queue(self, user_uid):
+        self.query('DELETE FROM queue WHERE user_uid = ?;', (user_uid,))
     
-    def get_user_queue(self, user):
-        return normalize(self.query('SELECT data FROM queue WHERE username = ?;'))
+    def get_user_queue(self, user_uid):
+        query = self.query('SELECT data FROM queue WHERE user_uid = ?;', (user_uid,))
+        return normalize(query) if query else None
     
     def get_queue(self):
-        return normalize(self.query('SELECT username FROM queue;'))
+        query = self.query('SELECT user_uid FROM queue;')
+        return normalize(query) if query else None
 
 
     def __generate_key(self, length):
         return ''.join(choice(ascii_letters + digits + punctuation) for i in range(length))
 
-    def is_user_already_exist(self, username):
-        return True if len(self.find("users", "username", username)) > 0 else False
+    def is_user_already_exist(self, user_uid):
+        return True if len(self.find("users", "user_uid", user_uid)) > 0 else False
     
-    def is_user_verificated(self, username):
-        return True if self.find("users", "username", username)[0][3] == 1 else False
+    def is_user_verificated(self, user_uid):
+        return True if self.find("users", "user_uid", user_uid)[0][3] == 1 else False
     
-    def is_keys_match(self, username, public_key):
-        return True if public_key in self.find("users", "username", username)[0] else False
+    def is_keys_match(self, user_uid, public_key):
+        return True if public_key in self.find("users", "user_uid", user_uid)[0] else False
         
-    def is_invite_hash_match(self, username, invite_hash):
-        return True if self.find("invite_keys", "username", username)[0][2] == invite_hash else False
+    def is_invite_hash_match(self, user_uid, invite_hash):
+        return True if self.find("invite_keys", "user_uid", user_uid)[0][2] == invite_hash else False
     
-    def get_user_id(self, table_name, username):
-        return self.find(table_name, "username", username)[0][0]
+    def get_user_id(self, table_name, user_uid):
+        return self.find(table_name, "user_uid", user_uid)[0][0]
     
     def make_hash(self, string):
         return sha256(string.encode()).hexdigest()
     
-    def add_user_without_verification(self, username, public_key):
-        self.insert("users", "username, public_key, verification", (username, public_key, True))
+    def add_user_without_verification(self, username, user_uid, public_key):
+        self.insert("users", "user_uid, username, public_key, verification", (user_uid, username, public_key, True))
     
-    def add_user_with_verification(self, username, public_key):
+    def add_user_with_verification(self, username, user_uid, public_key):
         word = self.__generate_key(32)
-        self.insert("users", "username, public_key, verification, invite_word", (username, public_key, False, word))
+        self.insert("users", "user_uid ,username, public_key, verification, invite_word", (user_uid, username, public_key, False, word))
         invite_hash = sha256(word.encode()).hexdigest()
-        self.insert("invite_keys", "username, invite_hash", (username, invite_hash))
+        self.insert("invite_keys", "user_uid, invite_hash", (user_uid, invite_hash))
     
-    def verificate_user(self, username, invite_hash):
-        if self.is_invite_hash_match(username, invite_hash):
-            self.update("users", "verification", [True, self.get_user_id("users", username)])
-            self.update("invite_keys", "invite_hash", ['VERIFICATED', self.get_user_id("invite_keys", username)])
+    def verificate_user(self, user_uid, invite_hash):
+        if self.is_invite_hash_match(user_uid, invite_hash):
+            self.update("users", "verification", [True, self.get_user_id("users", user_uid)])
+            self.update("invite_keys", "invite_hash", ['VERIFICATED', self.get_user_id("invite_keys", user_uid)])
             return True
         else:
             return False

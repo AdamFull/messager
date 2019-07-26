@@ -4,7 +4,8 @@
 import socket
 from threading import Thread
 from autologging import logged, traced
-from server_database import ServerDatabase, ServerSettings, RSACrypt
+from server_database import ServerDatabase, ServerSettings, RSACrypt, sha_hd
+from json import dumps, loads
 
 STATE_READY = 0
 STATE_WORKING = 1
@@ -18,7 +19,7 @@ class Connection(socket.socket):
         self.connection_status = False
         self.ip: str = args[0]
         self.port: int = args[1]
-        self.nickname = ''
+        self.user_uid = ''
         self.rsa_public = ''
         self.thread: Thread = None
 
@@ -41,15 +42,16 @@ class Registration:
     # User registration on the server
     def signup(self, data):
         username = data[0]
-        public_key = data[1]
+        user_uid = data[1]
+        public_key = data[2]
         if self.setting.enable_password:
-            self.server_database.add_user_with_verification(username, public_key)
-            if self.verificate(username):
+            self.server_database.add_user_with_verification(username, user_uid, public_key)
+            if self.verificate(user_uid):
                 return True
             else:
                 return False
         else:
-            self.server_database.add_user_without_verification(username, public_key)
+            self.server_database.add_user_without_verification(username, user_uid, public_key)
             return True
 
     # User authorization on the server
@@ -61,16 +63,17 @@ class Registration:
             if "wanna_connect" in data.keys():
                 self.setting.protocol.request({"userdata": ""}, self.connection.socket)
                 data = self.setting.protocol.response(self.connection.socket)
-                username, public_key = data["nickname"], data["public_key"]
+                username, user_uid, public_key = data["nickname"], sha_hd(data["public_key"]), data["puclic_key"]
         else:
-            username, public_key = data[0], data[1]
+            username, user_uid, public_key = data[0], data[1], data[2]
         
         self.connection.nickname = username
+        self.connection.user_uid = user_uid
         self.connection.rsa_public = public_key
 
-        if self.server_database.is_user_already_exist(username):
-            if self.server_database.is_user_verificated(username):
-                if self.server_database.is_keys_match(username, public_key):
+        if self.server_database.is_user_already_exist(user_uid):
+            if self.server_database.is_user_verificated(user_uid):
+                if self.server_database.is_keys_match(user_uid, public_key):
                     key = self.setting.encrypt_key(self.setting.protocol.aes_key, public_key)
                     self.setting.protocol.request({"success": key.decode()}, self.connection.socket)
                     return True
@@ -78,15 +81,15 @@ class Registration:
                     self.setting.protocol.request({"key_error": ""}, self.connection.socket)
                     return False
             else:
-                if self.verificate(username):
-                    self.signin([username, str(public_key)])
+                if self.verificate(user_uid):
+                    self.signin([username, user_uid, str(public_key)])
                     return True
                 else:
                     self.setting.protocol.request({"verification_error": ""}, self.connection.socket)
                     return False
         else:
-            if self.signup([username, str(public_key)]):
-                self.signin([username, str(public_key)])
+            if self.signup([username, user_uid, str(public_key)]):
+                self.signin([username, user_uid, str(public_key)])
                 return True
             else:
                 # Unknown error.
@@ -112,7 +115,7 @@ class Server(socket.socket):
                 if data:
                     if(self.parse_client_command(data, client_connection)):
                         continue
-                    self.sendToChat(data)
+                    self.send_to_chat(data)
                 else:
                     raise socket.error
             except socket.error:
@@ -120,7 +123,7 @@ class Server(socket.socket):
                 self.connections.pop(client_connection.nickname) # remove client from server
                 break
     
-    def sendToChat(self, data):
+    def send_to_chat(self, data):
         if "msg" in data.keys():
             chat_usrs = self.setting.database.get_users_in_chat(data["chat"])
             offline = []
@@ -128,7 +131,10 @@ class Server(socket.socket):
                 try:
                     self.setting.protocol.send(data, self.connections[usr].socket)
                 except KeyError:
-                    self.setting.database.add_to_queue(data, usr)
+                    self.setting.database.add_to_queue(dumps(data), usr) if not usr == "server" else None
+    
+    def send_for(self, data, user):
+        self.setting.protocol.send(data, self.connections[user].socket)
 
 
     def parse_client_command(self, data, client_data:Connection):
@@ -155,12 +161,14 @@ class Server(socket.socket):
             if data["cmd"] == "chats":
                 self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.nickname)}, client_data.socket)
                 return True
+            if data["cmd"] == "disconnect":
+                self.setting.protocol.send({"info": "Nu i vali otsuda koresh."}, client_data.socket)
         return False
     
     def send_qeued(self, client_data: Connection):
         messages = self.setting.database.get_user_queue(client_data.nickname)
         for message in messages:
-            self.sendToChat(message)
+            self.send_for(loads(message), client_data.nickname)
         self.setting.database.remove_from_queue(client_data.nickname)
 
     def connect(self, client_data:Connection):
@@ -169,10 +177,12 @@ class Server(socket.socket):
             client_data.thread = Thread(target=self.handler, args=[client_data])
             client_data.thread.daemon = True
             client_data.thread.start()
-            self.connections.update({client_data.nickname: client_data})
-            self.setting.database.join_to_chat("server_main", client_data.nickname)
-            if client_data.nickname in self.setting.database.get_queue():
-                self.send_qeued(client_data)
+            self.connections.update({client_data.user_uid: client_data})
+            self.setting.database.join_to_chat("server_main", client_data.user_uid)
+            queue = self.setting.database.get_queue()
+            if queue:
+                if client_data.nickname in queue:
+                    self.send_qeued(client_data)
         else:
             client_data.socket.close()
 

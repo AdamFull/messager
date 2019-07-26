@@ -10,7 +10,9 @@ from shutil import rmtree
 #- loads settings from file
 #- saves settings to file
 
-sha = lambda x: sha256(x.encode()).hexdigest()
+sha_hd = lambda x: sha256(x.encode()).hexdigest()
+sha_d = lambda x: sha256(x.encode()).digest()
+get_cn = lambda x, y: "chat%s" % sha256(x.encode() + y.exportKey()).hexdigest()
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -135,11 +137,11 @@ class ClientDatabase(SqlInterface):
             self.server_port = settings[2]
             self.nickname = settings[3]
             self.password = settings[4]
-            private_key = AESCrypt(sha(self.password)).decrypt(settings[5])
+            private_key = AESCrypt(sha_hd(self.password)).decrypt(settings[5])
             self.protocol.load_rsa(private_key)
         else:
             private_key = RSACrypt().export_private()
-            private_key = AESCrypt(sha(conf[3])).encrypt(private_key)
+            private_key = AESCrypt(sha_hd(conf[3])).encrypt(private_key)
             conf.append(private_key)
             self.insert("user_settings", "server_ip, server_port, nickname, password, private_key", conf)
             self.load(conf[:len(conf)-1])
@@ -151,13 +153,16 @@ class ClientDatabase(SqlInterface):
         settings = self.query('SELECT * FROM user_settings WHERE "is_last" = ?', True)
     
     def join_to_chat(self, chat_name):
+        chat_name = get_cn(chat_name, self.protocol.public_rsa_key)
         self.create_table(chat_name, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, username TEXT, message TEXT, chat TEXT, time TEXT, data TEXT")
     
     def load_chat(self, chat_name):
+        chat_name = get_cn(chat_name, self.protocol.public_rsa_key)
         result = self.query('SELECT * FROM %s' % chat_name)
         return result
     
     def recv_message(self, chat_name, data):
+        chat_name = get_cn(chat_name, self.protocol.public_rsa_key)
         self.insert(chat_name, "username, message, chat, time, data", (data["nickname"], data["msg"], data["chat"], data["time"], data["date"]))
 
 if __name__ == "__main__":

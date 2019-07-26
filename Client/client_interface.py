@@ -19,6 +19,7 @@ class ObserverWorker(QtCore.QObject):
         self.data.emit(msg)
 
 class ConcreteObserver(Observer):
+  
     def __init__(self):
         self.observer_worker = ObserverWorker()
         self.need_update = True
@@ -30,9 +31,6 @@ class ConcreteObserver(Observer):
 
         if c_state == 2:
             self.observer_worker.recvData({"verification": None})
-        if c_state == 1 and self.need_update:
-            self.need_update = False
-            subject.server_command({"cmd": "chats"})
 
 
 class Connect(QtWidgets.QDialog):
@@ -211,7 +209,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def disconnect_(self) -> None:
         if self.client.isLogined:
             self.client.disconnect()
-            self.thread__.join()
+            self.ui.chat_list.clear()
+            self.ui.room_list.clear()
     
     def server_list(self):
         dialog = ServerList(self.client)
@@ -240,6 +239,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
+    print("VERSION: ", __version__)
     app = QtWidgets.QApplication([])
     application = MainWindow()
     application.show()

@@ -8,6 +8,8 @@ from time import gmtime, strftime, sleep
 from psutil import Process, virtual_memory
 import sys
 
+__version__ = [0, 4, 1, "alpha", "release"]
+
 if __name__ == "__main__":
     print("Starting server.")
 
@@ -23,6 +25,8 @@ if __name__ == "__main__":
     srv = Server()
     server_thread = Thread(target=srv.run)
     server_thread.start()
+
+    print("VERSION: ", __version__)
 
     self_usage = Process(getpid())
     while True:

@@ -56,7 +56,6 @@ class Client(Subject):
 
         self.current_chat = None
 
-        self.isConnected = False
         self.isLogined = False
     
     def attach(self, observer:Observer) -> None:
@@ -74,8 +73,7 @@ class Client(Subject):
         self.notify()
 
     def listen(self):
-        current_thread = threading.current_thread()
-        while getattr(current_thread, "do_run", True):
+        while getattr(self.thread, "do_run", True):
             try:
                 data = self.setting.protocol.recv(self.sock)
                 if data:
@@ -135,8 +133,6 @@ class Client(Subject):
             else:
                 self.change_message({"status": 'Connection failed.'})
                 return False
-        #self.setting.server_ip = ip
-        #self.setting.server_port = port
 
         if self.login():
             self.isLogined = True
@@ -146,6 +142,7 @@ class Client(Subject):
             self.thread.daemon = True
             self.thread.do_run = True
             self.thread.start()
+            self.server_command({"cmd": "chats"})
             return True
         else:
             return False
@@ -155,8 +152,9 @@ class Client(Subject):
         self._STATE = STATEMENT().DISCONNECTED
         self.isLogined = False
         self.thread.do_run = False
-        self.sock.close()
+        self.server_command({"cmd": "disconnect"})
         self.thread.join()
+        self.sock.close()
     
     def run(self) -> None:
         self.connect(self.setting.server_ip, self.setting.server_port)
