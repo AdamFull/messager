@@ -115,7 +115,7 @@ class Server(socket.socket):
                 if data:
                     if(self.parse_client_command(data, client_connection)):
                         continue
-                    self.send_to_chat(data)
+                    self.send(data)
                 else:
                     raise socket.error
             except socket.error:
@@ -123,13 +123,13 @@ class Server(socket.socket):
                 self.connections.pop(client_connection.user_uid) # remove client from server
                 break
     
-    def send_to_chat(self, data):
+    def send(self, data):
         if "msg" in data.keys():
             chat_usrs = self.setting.database.get_users_in_chat(data["chat"])
             offline = []
             for usr in chat_usrs:
                 try:
-                    self.setting.protocol.send(data, self.connections[usr].socket)
+                    self.send_for(data, self.connections[usr].socket)
                 except KeyError:
                     self.setting.database.add_to_queue(dumps(data), usr) if not usr == "server" else None
     
@@ -165,6 +165,10 @@ class Server(socket.socket):
                 return True
             if data["cmd"] == "disconnect":
                 self.setting.protocol.send({"info": "Nu i vali otsuda koresh."}, client_data.socket)
+                return True
+            if data["cmd"] == "friends":
+                g_f = lambda x: [self.setting.database.get_username(uid) for uid in self.setting.database.get_friends(x)]
+                self.setting.protocol.send({"friends": g_f(client_data.user_uid)}, client_data.socket)
         return False
     
     def send_qeued(self, client_data: Connection):

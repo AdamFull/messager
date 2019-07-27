@@ -128,6 +128,7 @@ class ServerDatabase(SqlInterface):
         self.create_table("related_users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, friend TEXT")
         self.create_chat("server_main", "server")
 
+    #Chat
     def create_chat(self, chat_name, user_uid):
         table = get_cn(chat_name, b'server')
         if not table in self.table_list():
@@ -189,6 +190,34 @@ class ServerDatabase(SqlInterface):
         query = self.query('SELECT user_uid FROM accessories;')
         return normalize(query) if query else None
     
+    #User
+    def get_user_uid(self, username):
+        return self.query('SELECT user_uid FROM users WHERE username = ?;', (username,))[0]
+    
+    def get_username(self, user_uid):
+        return self.query('SELECT username FROM users WHERE user_uid = ?;', (user_uid,))[0]
+    
+    def find_user(self, username):
+        result = self.query('SELECT username, user_uid FROM users WHERE username = ?;', (username,))
+        return normalize(result) if result else None
+    
+    def get_uid(self, username):
+        return self.query('SELECT id FROM users WHERE username = ?;', (username,))[0]
+    
+    def change_username(self, new_username, username):
+        self.update("users", "username", (new_username, self.get_uid(username)))
+    
+    def add_friend(self, my_uid, user_uid):
+        self.insert("related_users", "user, friend", (my_uid, user_uid))
+    
+    def get_friends(self, user_uid):
+        result = self.query('SELECT friend FROM related_users WHERE user = ?;', (user_uid,))
+        return normalize(result) if result else None
+    
+    def remove_friend(self, my_uid, user_uid):
+        self.query('DELETE FROM related_users WHERE user = ? AND friend = ?;', (my_uid, user_uid))
+    
+    #Queue
     def add_to_queue(self, data, user_uid):
         self.insert("queue", "data, user_uid", (data, user_uid))
     
