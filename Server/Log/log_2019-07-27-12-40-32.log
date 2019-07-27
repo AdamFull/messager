@@ -1,0 +1,33 @@
+TRACE:server.py,103:server.Server.__init__:CALL *() **{}
+TRACE:server.py,103:server.Server.__init__:RETURN None
+TRACE:server.py,196:server.Server.run:CALL *() **{}
+TRACE:server.py,180:server.Server.connect:CALL *(<server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,111:server.Server.handler:CALL *(<server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,180:server.Server.connect:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'Moja komnata'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'server_main'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'i'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'ih'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'ihf'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'ih'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'i'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'ma'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,111:server.Server.handler:RETURN None

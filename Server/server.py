@@ -129,7 +129,7 @@ class Server(socket.socket):
             offline = []
             for usr in chat_usrs:
                 try:
-                    self.send_for(data, self.connections[usr].socket)
+                    self.send_for(data, self.connections[usr].user_uid)
                 except KeyError:
                     self.setting.database.add_to_queue(dumps(data), usr) if not usr == "server" else None
     
@@ -140,6 +140,9 @@ class Server(socket.socket):
     def parse_client_command(self, data, client_data:Connection):
         '''This method is responsible for processing commands from the client.'''
         keys = data.keys()
+        g_c_s = lambda x: self.setting.database.get_chat_settings(x)
+        g_c_l = lambda x: self.setting.database.get_chats_like(x)
+        g_u_c = lambda x: self.setting.database.get_user_chats(x)
         if "cmd" in keys:
             if "value" in keys:
                 if data["cmd"] == "jchat":
@@ -147,20 +150,19 @@ class Server(socket.socket):
                     return True
                 if data["cmd"] == "fchat":
                     if not data["value"]:
-                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
+                        self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
                     else:
-                        self.setting.protocol.send({"chats": self.setting.database.get_chats_like(data["value"])}, client_data.socket)
+                        finded = g_c_l(data["value"])
+                        self.setting.protocol.send({"chats": {data: g_c_s(data) for data in finded} if finded else None}, client_data.socket)
                     return True
                 if data["cmd"] == "mchat":
                     if(self.setting.database.create_chat(data["value"], client_data.user_uid)):
-                        self.setting.protocol.send({"chats": self.setting.database.get_user_chats(client_data.user_uid)}, client_data.socket)
+                        self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
                         self.setting.protocol.send({"info": "Chat created!"}, client_data.socket)
                     else:
                         self.setting.protocol.send({"info": "Error!"}, client_data.socket)
 
             if data["cmd"] == "chats":
-                g_c_s = lambda x: self.setting.database.get_chat_settings(x)
-                g_u_c = lambda x: self.setting.database.get_user_chats(x)
                 self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
                 return True
             if data["cmd"] == "disconnect":

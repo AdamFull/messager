@@ -1,0 +1,209 @@
+TRACE:server.py,103:server.Server.__init__:CALL *() **{}
+TRACE:server.py,103:server.Server.__init__:RETURN None
+TRACE:server.py,198:server.Server.run:CALL *() **{}
+TRACE:server.py,182:server.Server.connect:CALL *(<server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,111:server.Server.handler:CALL *(<server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,182:server.Server.connect:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'h'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'he'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'hel'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'hell'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'hello'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'hell'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'hel'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'he'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'h'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 's'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'se'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 's'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'ma'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'server_main'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'hello my friend', 'chat': 'server_main', 'time': '12:54:53', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'hello my friend', 'chat': 'server_main', 'time': '12:54:53', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'hello my friend', 'chat': 'server_main', 'time': '12:54:53', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'Long time no see', 'chat': 'server_main', 'time': '12:54:57', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'Long time no see', 'chat': 'server_main', 'time': '12:54:57', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'Long time no see', 'chat': 'server_main', 'time': '12:54:57', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'How are you?', 'chat': 'server_main', 'time': '12:55:04', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'How are you?', 'chat': 'server_main', 'time': '12:55:04', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'How are you?', 'chat': 'server_main', 'time': '12:55:04', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,182:server.Server.connect:CALL *(<server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,111:server.Server.handler:CALL *(<server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,176:server.Server.send_qeued:CALL *(<server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'hello my friend', 'chat': 'server_main', 'time': '12:54:53', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'Long time no see', 'chat': 'server_main', 'time': '12:54:57', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'How are you?', 'chat': 'server_main', 'time': '12:55:04', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,176:server.Server.send_qeued:RETURN None
+TRACE:server.py,182:server.Server.connect:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'server_main'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'Ohhh', 'chat': 'server_main', 'time': '12:55:54', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'Ohhh', 'chat': 'server_main', 'time': '12:55:54', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Ohhh', 'chat': 'server_main', 'time': '12:55:54', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Ohhh', 'chat': 'server_main', 'time': '12:55:54', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'server_main', 'time': '12:55:56', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'server_main', 'time': '12:55:56', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'server_main', 'time': '12:55:56', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'server_main', 'time': '12:55:56', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'Im good', 'chat': 'server_main', 'time': '12:56:02', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'Im good', 'chat': 'server_main', 'time': '12:56:02', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Im good', 'chat': 'server_main', 'time': '12:56:02', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Im good', 'chat': 'server_main', 'time': '12:56:02', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'And you?', 'chat': 'server_main', 'time': '12:56:09', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'And you?', 'chat': 'server_main', 'time': '12:56:09', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'And you?', 'chat': 'server_main', 'time': '12:56:09', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'And you?', 'chat': 'server_main', 'time': '12:56:09', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'May be go to moja komnata?', 'chat': 'server_main', 'time': '12:56:24', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'May be go to moja komnata?', 'chat': 'server_main', 'time': '12:56:24', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'May be go to moja komnata?', 'chat': 'server_main', 'time': '12:56:24', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'May be go to moja komnata?', 'chat': 'server_main', 'time': '12:56:24', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'Go', 'chat': 'server_main', 'time': '12:56:28', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'Go', 'chat': 'server_main', 'time': '12:56:28', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Go', 'chat': 'server_main', 'time': '12:56:28', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Go', 'chat': 'server_main', 'time': '12:56:28', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'mo'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'Moja komnata'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': 'm'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'fchat', 'value': None}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'Moja komnata', 'time': '12:56:51', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'Moja komnata', 'time': '12:56:51', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'Moja komnata', 'time': '12:56:51', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'Hi', 'chat': 'Moja komnata', 'time': '12:56:51', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'You here?', 'chat': 'Moja komnata', 'time': '12:56:55', 'date': '2019-07-27'}, <server.Connection fd=9, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'You here?', 'chat': 'Moja komnata', 'time': '12:56:55', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'You here?', 'chat': 'Moja komnata', 'time': '12:56:55', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'You here?', 'chat': 'Moja komnata', 'time': '12:56:55', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'Moja komnata'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'Yup', 'chat': 'Moja komnata', 'time': '12:57:01', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'Yup', 'chat': 'Moja komnata', 'time': '12:57:01', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'Yup', 'chat': 'Moja komnata', 'time': '12:57:01', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'Yup', 'chat': 'Moja komnata', 'time': '12:57:01', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'What are you doing in free time?', 'chat': 'Moja komnata', 'time': '12:57:21', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'What are you doing in free time?', 'chat': 'Moja komnata', 'time': '12:57:21', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'What are you doing in free time?', 'chat': 'Moja komnata', 'time': '12:57:21', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'What are you doing in free time?', 'chat': 'Moja komnata', 'time': '12:57:21', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,111:server.Server.handler:RETURN None
+TRACE:server.py,111:server.Server.handler:RETURN None
+TRACE:server.py,182:server.Server.connect:CALL *(<server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,111:server.Server.handler:CALL *(<server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,182:server.Server.connect:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,182:server.Server.connect:CALL *(<server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,111:server.Server.handler:CALL *(<server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>,) **{}
+TRACE:server.py,182:server.Server.connect:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'chats'}, <server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'server_main'}, <server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator2281', 'msg': 'vhjv khvh', 'chat': 'server_main', 'time': '13:09:59', 'date': '2019-07-27'}, <server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator2281', 'msg': 'vhjv khvh', 'chat': 'server_main', 'time': '13:09:59', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'vhjv khvh', 'chat': 'server_main', 'time': '13:09:59', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator2281', 'msg': 'vhjv khvh', 'chat': 'server_main', 'time': '13:09:59', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'server_main'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'Moja komnata'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'nickname': 'nagibator228', 'msg': 'hvkjchkxgjc', 'chat': 'Moja komnata', 'time': '13:10:08', 'date': '2019-07-27'}, <server.Connection fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN False
+TRACE:server.py,126:server.Server.send:CALL *({'nickname': 'nagibator228', 'msg': 'hvkjchkxgjc', 'chat': 'Moja komnata', 'time': '13:10:08', 'date': '2019-07-27'},) **{}
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'hvkjchkxgjc', 'chat': 'Moja komnata', 'time': '13:10:08', 'date': '2019-07-27'}, '6a7b5338d6116a7526d60338cc36c8448f205d2e3fce85dc1adb05a5c783702c') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,136:server.Server.send_for:CALL *({'nickname': 'nagibator228', 'msg': 'hvkjchkxgjc', 'chat': 'Moja komnata', 'time': '13:10:08', 'date': '2019-07-27'}, '83aaea6c4e9ddc55d7113b895c3150a79a858206e471d6bb3f7b5330fbc41c8b') **{}
+TRACE:server.py,136:server.Server.send_for:RETURN None
+TRACE:server.py,126:server.Server.send:RETURN None
+TRACE:server.py,140:server.Server.parse_client_command:CALL *({'cmd': 'jchat', 'value': 'Moja komnata'}, <server.Connection fd=8, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('0.0.0.0', 0)>) **{}
+TRACE:server.py,140:server.Server.parse_client_command:RETURN True
+TRACE:server.py,111:server.Server.handler:RETURN None
+TRACE:server.py,111:server.Server.handler:RETURN None

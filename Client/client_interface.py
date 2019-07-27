@@ -127,7 +127,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.open_sb_btn.clicked.connect(self.create_chat)
 
         # UI defaults
-        self.ui.statusbar.showMessage("Disconnected.")
+        #self.ui.statusbar.showMessage("Disconnected.")
         self.ui.chat_list.setWordWrap(True)
         self.ui.room_list.setWordWrap(True)
         self.ui.room_list.setIconSize(QtCore.QSize(45, 45))
@@ -184,7 +184,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif "chats" in keys:
             self.loadRooms(data["chats"])
         elif "status" in keys:
-            self.ui.statusbar.showMessage(data["status"])
+            #self.ui.statusbar.showMessage(data["status"])
+            pass
         elif "verification" in keys:
             self.verification_input()
         else:
