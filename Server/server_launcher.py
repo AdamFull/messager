@@ -1,3 +1,6 @@
+#!/usr/bin/python3.6
+# -*- coding: utf-8 -*-
+
 from server import Server
 from os import makedirs, getpid
 from os.path import dirname, exists, abspath, isfile
@@ -12,6 +15,10 @@ __version__ = [0, 4, 1, "alpha", "release"]
 
 if __name__ == "__main__":
     print("Starting server.")
+
+    show_stat = True
+    if len(sys.argv) > 1 and sys.argv[1] == "-d":
+        show_stat = False
 
     log_path = dirname(abspath(__file__)) + '/Log/'
 
@@ -31,11 +38,12 @@ if __name__ == "__main__":
     self_usage = Process(getpid())
     while True:
         sleep(1)
-        u_cpu = int(self_usage.cpu_percent())
-        u_memory = int(self_usage.memory_info()[0]/2.**20)
-        t_memory = int(virtual_memory()[0]/2.**20)
-        u_disk = int(self_usage.io_counters()[0]/self_usage.io_counters()[1])
-        o_slots = len(srv.connections.keys())
-        t_slots = srv.setting.maximum_users
-        sys.stdout.write("\rSERVER MONITOR [CPU: %s%% | RAM: %s/%s Mb | DISK: %s%% | SLOTS: %s/%s]" % (u_cpu, u_memory, t_memory, u_disk, o_slots, t_slots))
-        sys.stdout.flush()
+        if show_stat:
+            u_cpu = int(self_usage.cpu_percent())
+            u_memory = int(self_usage.memory_info()[0]/2.**20)
+            t_memory = int(virtual_memory()[0]/2.**20)
+            u_disk = int(self_usage.io_counters()[0]/self_usage.io_counters()[1])
+            o_slots = len(srv.connections.keys())
+            t_slots = srv.setting.maximum_users
+            sys.stdout.write("\rSERVER MONITOR [CPU: %s%% | RAM: %s/%s Mb | DISK: %s%% | SLOTS: %s/%s]" % (u_cpu, u_memory, t_memory, u_disk, o_slots, t_slots))
+            sys.stdout.flush()
