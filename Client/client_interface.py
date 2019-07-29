@@ -150,10 +150,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def findChat(self):
         text = self.ui.search_t.text()
         if self.client.isLogined:
-            if text: 
-                self.client.find_request(text)
+            if text[0] == "@":
+                self.client.find_user(text)
             else:
-                self.client.find_request(None)
+                if text: 
+                    self.client.find_request(text)
+                else:
+                    self.client.find_request(None)
     
     def loadRooms(self, data):
         self.ui.room_list.clear()

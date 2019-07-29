@@ -175,6 +175,10 @@ class Client(Subject):
     def find_request(self, data):
         self.server_command({"cmd": "fchat", "value": data})
     
+    def find_user(self, data):
+        if len(data) > 0:
+            self.server_command({"cmd": "fuser", "value": data[1:]})
+    
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "chat": self.current_chat, "time": strftime("%H:%M:%S", gmtime()), "date": strftime("%Y-%m-%d", gmtime())}
         self.setting.protocol.send(msg_data, self.sock)

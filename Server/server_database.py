@@ -191,17 +191,17 @@ class ServerDatabase(SqlInterface):
     
     #User
     def get_user_uid(self, username):
-        return self.query('SELECT user_uid FROM users WHERE username = ?;', (username,))[0]
+        return self.query('SELECT user_uid FROM users WHERE username = ?;', (username,))[0][0]
     
     def get_username(self, user_uid):
-        return self.query('SELECT username FROM users WHERE user_uid = ?;', (user_uid,))[0]
+        return self.query('SELECT username FROM users WHERE user_uid = ?;', (user_uid,))[0][0]
     
     def find_user(self, username):
-        result = self.query('SELECT username, user_uid FROM users WHERE username = ?;', (username,))
+        result = self.query('SELECT user_uid FROM users WHERE username LIKE ?;', ('%'+username+'%',))
         return normalize(result) if result else None
     
     def get_uid(self, username):
-        return self.query('SELECT id FROM users WHERE username = ?;', (username,))[0]
+        return self.query('SELECT id FROM users WHERE username = ?;', (username,))[0][0]
     
     def change_username(self, new_username, username):
         self.update("users", "username", (new_username, self.get_uid(username)))

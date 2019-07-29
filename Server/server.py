@@ -143,6 +143,8 @@ class Server(socket.socket):
         g_c_s = lambda x: self.setting.database.get_chat_settings(x)
         g_c_l = lambda x: self.setting.database.get_chats_like(x)
         g_u_c = lambda x: self.setting.database.get_user_chats(x)
+        f_u_l = lambda x: self.setting.database.find_user(x)
+        g_u_n = lambda x: self.setting.database.get_username(x)
         if "cmd" in keys:
             if "value" in keys:
                 if data["cmd"] == "jchat":
@@ -155,6 +157,12 @@ class Server(socket.socket):
                         finded = g_c_l(data["value"])
                         self.setting.protocol.send({"chats": {data: g_c_s(data) for data in finded} if finded else None}, client_data.socket)
                     return True
+                if data["cmd"] == "fuser":
+                    if not data["value"]:
+                        self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
+                    else:
+                        finded = f_u_l(data["value"])
+                        self.setting.protocol.send({"users": {g_u_n(data): data for data in finded if data != client_data.user_uid} if finded else None}, client_data.socket)
                 if data["cmd"] == "mchat":
                     if(self.setting.database.create_chat(data["value"], client_data.user_uid)):
                         self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
