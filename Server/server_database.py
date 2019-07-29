@@ -125,7 +125,6 @@ class ServerDatabase(SqlInterface):
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, invite_hash TEXT")
         self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, chat TEXT, role TEXT")
         self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, user_uid TEXT")
-        self.create_table("related_users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, friend TEXT")
         self.create_chat("server_main", "server")
 
     #Chat
@@ -206,16 +205,6 @@ class ServerDatabase(SqlInterface):
     
     def change_username(self, new_username, username):
         self.update("users", "username", (new_username, self.get_uid(username)))
-    
-    def add_friend(self, my_uid, user_uid):
-        self.insert("related_users", "user, friend", (my_uid, user_uid))
-    
-    def get_friends(self, user_uid):
-        result = self.query('SELECT friend FROM related_users WHERE user = ?;', (user_uid,))
-        return normalize(result) if result else None
-    
-    def remove_friend(self, my_uid, user_uid):
-        self.query('DELETE FROM related_users WHERE user = ? AND friend = ?;', (my_uid, user_uid))
     
     #Queue
     def add_to_queue(self, data, user_uid):

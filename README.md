@@ -21,7 +21,7 @@ A special feature is the freedom to choose a server, which guarantees privacy in
 ### How to start client?
 
 - First you need to install libraries for ```Python 3.6 (and higher)```. All necessary libraries are in ```requirements.txt```.
-- After you need to run the file ```client_interface.py```. Test server: 8```4.201.170.33:9191``` (version 0.4 ,alpha , release)
+- After you need to run the file ```client_interface.py```. Test server: 8```84.201.150.182:9191``` (version 0.4 ,alpha , release)
 
 ###If you find an error, fill out the form, and send us an email.
 

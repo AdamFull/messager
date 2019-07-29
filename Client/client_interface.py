@@ -125,6 +125,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.search_t.textEdited.connect(self.findChat)
         self.ui.search_t.setEnabled(False)
         self.ui.open_sb_btn.clicked.connect(self.create_chat)
+        self.ui.messaging_layout.setHidden(True)
 
         # UI defaults
         #self.ui.statusbar.showMessage("Disconnected.")
@@ -193,6 +194,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def changeRoom(self, item):
         self.ui.chat_list.clear()
+        self.ui.messaging_layout.setHidden(False)
+        self.ui.chat_name_l.setText(item.text())
         self.client.change_chat(item.text())
         messages = self.client.setting.load_chat(item.text())
         print(item.data(QtCore.Qt.UserRole))
