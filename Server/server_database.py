@@ -56,8 +56,10 @@ class SqlInterface:
         return [elt[0] for elt in data]
     
     def table_list(self):
+        lock.acquire(True)
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         data = self.cursor.fetchall()
+        lock.release()
         return [elt[0] for elt in data]
 
     def table_exists(self, table_name):
@@ -130,13 +132,16 @@ class ServerDatabase(SqlInterface):
     #Chat
     def create_chat(self, chat_name, user_uid):
         table = get_cn(chat_name, b'server')
-        if not table in self.table_list():
+        if not self.chat_exists(table):
             self.insert("accessories", "user_uid, chat, role", (user_uid, chat_name, "owner"))
             self.create_table(table, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, send_messages INTEGER, send_media INTEGER, send_s_a_g INTEGER, send_polls INTEGER, embed_links INTEGER, add_users INTEGER, pin_messages INTEGER, change_chat_info INTEGER")
             self.insert(table, "send_messages, send_media, send_s_a_g, send_polls, embed_links, add_users, pin_messages, change_chat_info", (True, True, True, True, True, True, True, True))
             return True
         else:
             return False
+    
+    def chat_exists(self, chat_name):
+        return chat_name in self.table_list()
     
     def remove_chat(self, chat_name):
         table = get_cn(chat_name, b'server')
@@ -183,7 +188,8 @@ class ServerDatabase(SqlInterface):
         return normalize(result) if result else None
     
     def get_users_in_chat(self, chat_name):
-        return normalize(self.query('SELECT user_uid FROM accessories WHERE chat = ?;', (chat_name,)))
+        result = self.query('SELECT user_uid FROM accessories WHERE chat = ?;', (chat_name,))
+        return normalize(result) if result else None
     
     def get_all_users(self):
         query = self.query('SELECT user_uid FROM accessories;')

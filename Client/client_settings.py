@@ -5,6 +5,7 @@ from json import load, dump
 from protocol import Protocol, RSACrypt, AESCrypt
 from hashlib import sha256
 from shutil import rmtree
+from threading import Lock
 
 #This class contains all client settings
 #- loads settings from file
@@ -13,6 +14,8 @@ from shutil import rmtree
 sha_hd = lambda x: sha256(x.encode()).hexdigest()
 sha_d = lambda x: sha256(x.encode()).digest()
 get_cn = lambda x, y: "chat%s" % sha256(x.encode() + y.exportKey()).hexdigest()
+
+lock = Lock()
 
 class SqlInterface:
     def __init__(self, dbname=None):
@@ -54,8 +57,10 @@ class SqlInterface:
         return [elt[0] for elt in data]
     
     def table_list(self):
+        lock.acquire(True)
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         data = self.cursor.fetchall()
+        lock.release()
         return [elt[0] for elt in data]
 
     def table_exists(self, table_name):

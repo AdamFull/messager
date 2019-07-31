@@ -137,7 +137,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.client.send(msg)
             self.recv_message(msg, QtCore.Qt.AlignRight)
             self.ui.message_box.setText("")
-            if self.client.chat_exists(chat_name):
+            if not self.client.chat_exists(self.client.current_chat):
                 self.client.join_to_chat(self.client.current_chat, True)
     
     def recv_message(self, msg, chat, align=QtCore.Qt.AlignLeft):
@@ -192,17 +192,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.verification_input()
         else:
             print(data)
-    
+
     def change_chat(self, item):
+        chat_data = item.data(QtCore.Qt.UserRole)
         chat_name = item.text()
         self.ui.chat_list.clear()
         self.ui.messaging_layout.setHidden(False)
         self.ui.chat_name_l.setText(chat_name)
-        self.client.change_chat(chat_name)
-        messages = self.client.load_chat(chat_name)
-        if messages:
-            for message in messages:
-                self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]}, True)
+        self.client.change_chat(chat_data if isinstance(chat_data, str) else chat_name)
+        if self.client.chat_exists(chat_name):
+            messages = self.client.load_chat(chat_name)
+            if messages:
+                for message in messages:
+                    self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]}, True)
 
 
     def verification_input(self):
