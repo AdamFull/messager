@@ -23,11 +23,11 @@ RUN apk update && \
     echo -e "\e[33m**** install third-party packages ****\e[37m" && \
     pip3 install --no-cache -r /usr/app/requirements.txt && \
     \
-    echo -e "\e[34**** removing pip packages ****\e[37m" && \
+    echo -e "\e[34m**** removing pip packages ****\e[37m" && \
     \
     pip3 uninstall -y setuptools wheel && \
     \
-    echo -e "\e[34**** removing useless packages ****\e[94m" && \
+    echo -e "\e[34**** removing useless packages ****\e[37m" && \
     apk del gcc libc-dev linux-headers python3-dev && \
     \
     echo -e "\e[92m**** BUILDING COMPLETE ****\e[39m"

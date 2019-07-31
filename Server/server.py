@@ -162,7 +162,7 @@ class Server(socket.socket):
                         self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
                     else:
                         finded = f_u_l(data["value"])
-                        self.setting.protocol.send({"users": {g_u_n(data): data for data in finded if data != client_data.user_uid} if finded else None}, client_data.socket)
+                        self.setting.protocol.send({"chats": {g_u_n(data): data for data in finded if data != client_data.user_uid} if finded else None}, client_data.socket)
                 if data["cmd"] == "mchat":
                     if(self.setting.database.create_chat(data["value"], client_data.user_uid)):
                         self.setting.protocol.send({"chats": {data: g_c_s(data) for data in g_u_c(client_data.user_uid)}}, client_data.socket)
@@ -176,9 +176,6 @@ class Server(socket.socket):
             if data["cmd"] == "disconnect":
                 self.setting.protocol.send({"info": "Nu i vali otsuda koresh."}, client_data.socket)
                 return True
-            if data["cmd"] == "friends":
-                g_f = lambda x: [self.setting.database.get_username(uid) for uid in self.setting.database.get_friends(x)]
-                self.setting.protocol.send({"friends": g_f(client_data.user_uid)}, client_data.socket)
         return False
     
     def send_qeued(self, client_data: Connection):

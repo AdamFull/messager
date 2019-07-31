@@ -80,7 +80,8 @@ class Client(Subject):
                     if self.rcv_output:
                         self.rcv_output(data)
                     
-                    self.change_message(data)
+                    self.recv_message(data)
+                    #self.change_message(data)
 
             except socket.error:
                 self._STATE = STATEMENT().DISCONNECTED
@@ -159,25 +160,43 @@ class Client(Subject):
     def run(self) -> None:
         self.connect(self.setting.server_ip, self.setting.server_port)
     
+    def recv_message(self, data):
+        if data:
+            data_keys = data.keys()
+            if "msg" in data_keys:
+                if not self.chat_exists(data["chat"]):
+                    self.join_to_chat(data["chat"], True)
+                self.setting.recv_message(data["chat"], data)
+            self.change_message(data)
+    
+    def chat_exists(self, chat_name):
+        return self.setting.chat_exists(chat_name)
+
+    def load_chat(self, chat_name):
+        return self.setting.load_chat(chat_name)
+    
+    def join_to_chat(self, chat_name, do_join = False):
+        if do_join:
+            self.setting.join_to_chat(chat_name)
+            self.server_command({"cmd": "jchat", "value": chat_name})
+            self.server_command({"cmd": "chats"})
+    
     def server_command(self, command) -> None:
         self.setting.protocol.send(command, self.sock)
     
     def change_chat(self, chat):
         self.current_chat = chat
-        self.setting.join_to_chat(chat)
-        self.server_command({"cmd": "jchat", "value": chat})
     
     def create_chat(self, chat):
         self.server_command({"cmd": "mchat", "value": chat})
         sleep(1)
-        self.change_chat(chat)
+        self.join_to_chat(chat, True)
     
     def find_request(self, data):
         self.server_command({"cmd": "fchat", "value": data})
     
     def find_user(self, data):
-        if len(data) > 0:
-            self.server_command({"cmd": "fuser", "value": data[1:]})
+        self.server_command({"cmd": "fuser", "value": data[1:]})
     
     def send(self, input_msg): #Message sending method
         msg_data = {"nickname": self.setting.nickname, "msg": input_msg, "chat": self.current_chat, "time": strftime("%H:%M:%S", gmtime()), "date": strftime("%Y-%m-%d", gmtime())}

@@ -118,39 +118,39 @@ class MainWindow(QtWidgets.QMainWindow):
         # Other actions...
 
         # UI actions
-        self.ui.send_message.clicked.connect(self.sendMessage)
-        self.ui.room_list.itemClicked.connect(self.changeRoom)
-        # self.ui.message_box.textEdited.connect() #If text edited...
-        self.ui.message_box.returnPressed.connect(self.sendMessage)
-        self.ui.search_t.textEdited.connect(self.findChat)
+        self.ui.send_message.clicked.connect(self.send_message)
+        self.ui.room_list.itemClicked.connect(self.change_chat)
+        self.ui.message_box.returnPressed.connect(self.send_message)
+        self.ui.search_t.textEdited.connect(self.find_chat)
         self.ui.search_t.setEnabled(False)
         self.ui.open_sb_btn.clicked.connect(self.create_chat)
         self.ui.messaging_layout.setHidden(True)
 
         # UI defaults
-        #self.ui.statusbar.showMessage("Disconnected.")
         self.ui.chat_list.setWordWrap(True)
         self.ui.room_list.setWordWrap(True)
         self.ui.room_list.setIconSize(QtCore.QSize(45, 45))
     
-    def sendMessage(self):
+    def send_message(self):
         msg = self.ui.message_box.text()
         if msg and self.client.isLogined and self.client.current_chat:
             self.client.send(msg)
-            self.recvMessage(msg, QtCore.Qt.AlignRight)
+            self.recv_message(msg, QtCore.Qt.AlignRight)
             self.ui.message_box.setText("")
+            if self.client.chat_exists(chat_name):
+                self.client.join_to_chat(self.client.current_chat, True)
     
-    def recvMessage(self, msg, chat, align=QtCore.Qt.AlignLeft):
+    def recv_message(self, msg, chat, align=QtCore.Qt.AlignLeft):
         if chat == self.client.current_chat:
             item = QtWidgets.QListWidgetItem(msg)
             item.setTextAlignment(align)
             self.ui.chat_list.addItem(item)
             self.ui.chat_list.scrollToItem(item)
     
-    def findChat(self):
+    def find_chat(self):
         text = self.ui.search_t.text()
         if self.client.isLogined:
-            if text[0] == "@":
+            if len(text) > 0 and text[0] == "@":
                 self.client.find_user(text)
             else:
                 if text: 
@@ -158,53 +158,52 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     self.client.find_request(None)
     
-    def loadRooms(self, data):
+    def load_chats(self, data):
         self.ui.room_list.clear()
-        chats = data.keys()
-        for chat in chats:
-            item = QtWidgets.QListWidgetItem(chat)
-            item.setData(QtCore.Qt.UserRole, data[chat])
-            item.setSizeHint(QtCore.QSize(0, 50))
-            item.setTextAlignment(QtCore.Qt.AlignLeft)
-            pixmap = QtGui.QPixmap(45, 45)
-            pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
-            item.setIcon(QtGui.QIcon(pixmap))
-            self.ui.room_list.addItem(item)
+        print(data)
+        if data:
+            chats = data.keys()
+            for chat in chats:
+                item = QtWidgets.QListWidgetItem(chat)
+                item.setData(QtCore.Qt.UserRole, data[chat])
+                item.setSizeHint(QtCore.QSize(0, 50))
+                item.setTextAlignment(QtCore.Qt.AlignLeft)
+                pixmap = QtGui.QPixmap(45, 45)
+                pixmap.fill(QtGui.QColor(rr(0, 255), rr(0, 255), rr(0, 255)))
+                item.setIcon(QtGui.QIcon(pixmap))
+                self.ui.room_list.addItem(item)
 
     def update(self, data: dict, loading=False):
         self.ui.search_t.setEnabled(True)
         keys = data.keys()
         if "msg" in keys:
             if not loading:
-                self.client.setting.recv_message(data["chat"], data)
                 QtMultimedia.QSound("/audio/msg.wav").play()
-            self.recvMessage("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
+            self.recv_message("[%s][%s]: %s" % (data["time"], data["nickname"], data["msg"]), 
                             data["chat"],
                             QtCore.Qt.AlignRight if self.client.setting.nickname == data["nickname"] else QtCore.Qt.AlignLeft)
         elif "info" in keys:
             print(data["info"])
-        elif "users" in keys:
-            print(data["users"])
         elif "chats" in keys:
-            self.loadRooms(data["chats"])
+            self.load_chats(data["chats"])
         elif "status" in keys:
-            #self.ui.statusbar.showMessage(data["status"])
-            pass
+            print(data["status"])
         elif "verification" in keys:
             self.verification_input()
         else:
             print(data)
     
-    def changeRoom(self, item):
+    def change_chat(self, item):
+        chat_name = item.text()
         self.ui.chat_list.clear()
         self.ui.messaging_layout.setHidden(False)
-        self.ui.chat_name_l.setText(item.text())
-        self.client.change_chat(item.text())
-        messages = self.client.setting.load_chat(item.text())
-        print(item.data(QtCore.Qt.UserRole))
+        self.ui.chat_name_l.setText(chat_name)
+        self.client.change_chat(chat_name)
+        messages = self.client.load_chat(chat_name)
         if messages:
             for message in messages:
                 self.update({"nickname": message[1], "msg": message[2], "chat": message[3], "time": message[4], "date": message[5]}, True)
+
 
     def verification_input(self):
         key, ok = QtWidgets.QInputDialog.getText(self, 'Verification', 'Enter verification key: ')
@@ -239,7 +238,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def connect(self):
         dialog = Connect(self.client)
         if dialog.exec_()==QtWidgets.QDialog.Accepted:
-            print(dialog.data)
             self.client.setting.load(dialog.data)
         else:
             return

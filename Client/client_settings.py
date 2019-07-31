@@ -161,6 +161,10 @@ class ClientDatabase(SqlInterface):
         result = self.query('SELECT * FROM %s' % chat_name)
         return result
     
+    def chat_exists(self, chat_name):
+        chat_name = get_cn(chat_name, self.protocol.public_rsa_key)
+        return True if chat_name in self.table_list() else False
+
     def recv_message(self, chat_name, data):
         chat_name = get_cn(chat_name, self.protocol.public_rsa_key)
         self.insert(chat_name, "username, message, chat, time, data", (data["nickname"], data["msg"], data["chat"], data["time"], data["date"]))
