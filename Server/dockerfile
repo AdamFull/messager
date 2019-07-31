@@ -1,0 +1,37 @@
+FROM alpine:3.10
+ 
+WORKDIR /usr/app
+COPY ./ /usr/app/
+
+RUN apk update && \
+    echo -e "\e[33m**** install C packages ****\e[37m" && \
+    apk add --no-cache gcc && \
+    apk add --no-cache libc-dev && \
+    apk add --no-cache linux-headers && \
+    apk add --no-cache python3-dev && \
+    \
+    echo -e "\e[33m**** install Python ****\e[37m" && \
+    apk add --no-cache python3 && \
+    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
+    \
+    echo -e "\e[33m**** install pip ****\e[37m" && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --no-cache --upgrade pip setuptools wheel && \
+    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
+    \
+    echo -e "\e[33m**** install third-party packages ****\e[37m" && \
+    pip3 install --no-cache -r /usr/app/requirements.txt && \
+    \
+    echo -e "\e[34**** removing pip packages ****\e[37m" && \
+    \
+    pip3 uninstall -y setuptools wheel && \
+    \
+    echo -e "\e[34**** removing useless packages ****\e[94m" && \
+    apk del gcc libc-dev linux-headers python3-dev && \
+    \
+    echo -e "\e[92m**** BUILDING COMPLETE ****\e[39m"
+  
+  EXPOSE 9191
+  
+  CMD python3 server_launcher.py

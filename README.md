@@ -15,13 +15,21 @@ A special feature is the freedom to choose a server, which guarantees privacy in
 
 ### How to start server?
 
-- First you need to install libraries for ```Python 3.6 (and higher)```. All necessary libraries are in ```requirements.txt```.
-- After you need to run the file ```server_launcher.py```
+- Install Docker in your machine.
+- Run shell in ```Server``` folder.
+- Enter the command ```docker build -t messager_server .``` and wait.
+- Enter the next command ```docker run -d -p 9191(port in your machine):9191(port in container) --name <container_name> messager_server```
+
+Example:
+```
+docker build -t messager_server .
+docker run -d -p 9191:9191 --name my_server messager_server
+```
 
 ### How to start client?
 
 - First you need to install libraries for ```Python 3.6 (and higher)```. All necessary libraries are in ```requirements.txt```.
-- After you need to run the file ```client_interface.py```. Test server: 8```84.201.150.182:9191``` (version 0.4 ,alpha , release)
+- After you need to run the file ```client_interface.py```. Test server: ```84.201.150.182:9191``` (version 0.4 ,alpha , release)
 
 ###If you find an error, fill out the form, and send us an email.
 

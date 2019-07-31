@@ -3,7 +3,7 @@ from ui.main_window import Ui_Messager
 from ui.connect_dialog import Ui_AddServer
 from ui.server_list import Ui_dialog_layout
 from threading import Thread
-from client import Client, STATEMENT, Observer, Subject
+from client_api import Client, STATEMENT, Observer, Subject
 import time
 from random import randrange as rr
 from json import loads
@@ -222,6 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.client.disconnect()
             self.ui.chat_list.clear()
             self.ui.room_list.clear()
+            self.ui.messaging_layout.setHidden(True)
     
     def server_list(self):
         dialog = ServerList(self.client)
