@@ -4,9 +4,7 @@ from ui.connect_dialog import Ui_AddServer
 from ui.server_list import Ui_dialog_layout
 from threading import Thread
 from client_api import Client, STATEMENT, Observer, Subject
-import time
 from random import randrange as rr
-from json import loads
 
 # pyuic5 main_window.ui -o main_window.py
 # pyuic5 connect_dialog.ui -o connect_dialog.py
