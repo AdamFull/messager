@@ -125,15 +125,15 @@ class ServerDatabase(SqlInterface):
         self.create_database(self.database_path)
         self.create_table("users", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, username TEXT, public_key TEXT, verification INTEGER, invite_word TEXT")
         self.create_table("invite_keys", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, invite_hash TEXT")
-        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, chat TEXT, role TEXT")
+        self.create_table("accessories", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_uid TEXT, chat TEXT, role TEXT, type TEXT")
         self.create_table("queue", "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data TEXT, user_uid TEXT")
         self.create_chat("server_main", "server")
 
     #Chat
-    def create_chat(self, chat_name, user_uid):
+    def create_chat(self, chat_name, user_uid, c_type="chat"):
         table = get_cn(chat_name, b'server')
         if not self.chat_exists(table):
-            self.insert("accessories", "user_uid, chat, role", (user_uid, chat_name, "owner"))
+            self.insert("accessories", "user_uid, chat, role, type", (user_uid, chat_name, "owner", c_type))
             self.create_table(table, "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, send_messages INTEGER, send_media INTEGER, send_s_a_g INTEGER, send_polls INTEGER, embed_links INTEGER, add_users INTEGER, pin_messages INTEGER, change_chat_info INTEGER")
             self.insert(table, "send_messages, send_media, send_s_a_g, send_polls, embed_links, add_users, pin_messages, change_chat_info", (True, True, True, True, True, True, True, True))
             return True
@@ -151,6 +151,12 @@ class ServerDatabase(SqlInterface):
             return True
         else:
             return False
+    
+    def get_chat_type(self, chat_name):
+        table = get_cn(chat_name, b'server')
+        if table in self.table_list():
+            result = self.query('SELECT type FROM accessories WHERE chat = ?;', (chat_name,))
+            return normalize(result) if result else None
     
     def update_chat_settings(self, chat_name, args):
         chat_name = get_cn(chat_name, b'server')
